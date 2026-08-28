@@ -9,12 +9,8 @@
 # sitting on someone's laptop. Teammates still `git pull` to update their
 # working copy. github.com updates on its own.
 #
-# Interval (GitHub's shortest reliable cron is 5 minutes, N must divide 60):
-#   every 5 min   */5 * * * *
-#   every 10 min  */10 * * * *
-#   every 15 min  */15 * * * *
-#   every 30 min  */30 * * * *
-#   every hour    0 * * * *
+# Interval is every 1 minute. GitHub may still delay or floor scheduled
+# runs (often ~5 min on github.com). Push to main also triggers a run.
 #
 # Manual run: Actions → Hackathon sync → Run workflow
 
@@ -24,7 +20,7 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "* * * * *"
   workflow_dispatch:
 
 concurrency:

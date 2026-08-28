@@ -4,10 +4,10 @@
 #   .\scripts\hackathon-sync.ps1
 #   .\scripts\hackathon-sync.ps1 -Minutes 10
 #   .\scripts\hackathon-sync.ps1 -Once
-#   .\scripts\hackathon-sync.ps1 -NoCommit -Minutes 5
+#   .\scripts\hackathon-sync.ps1 -NoCommit -Minutes 1
 
 param(
-    [int]$Minutes = 5,
+    [int]$Minutes = 1,
     [switch]$Once,
     [switch]$NoCommit
 )
