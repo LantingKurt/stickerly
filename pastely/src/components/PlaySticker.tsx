@@ -321,11 +321,11 @@ export default function PlaySticker({
         if (pointers.current.has(e.pointerId)) onPointerMove(e)
         else if (e.pointerType === 'mouse') trackTilt(e)
       }}
-      onPointerEnter={(e) => {
-        if (e.pointerType === 'mouse' && pointers.current.size === 0) trackTilt(e)
-      }}
-      onPointerLeave={(e) => {
-        if (e.pointerType === 'mouse' && pointers.current.size === 0) resetTilt()
+      onPointerOut={(e) => {
+        if (e.pointerType !== 'mouse' || pointers.current.size > 0) return
+        const next = e.relatedTarget
+        if (next instanceof Node && root.current?.contains(next)) return
+        resetTilt()
       }}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
