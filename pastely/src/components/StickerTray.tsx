@@ -25,7 +25,7 @@ export default function StickerTray({ stickers, urls, onDesk, onPick }: Props) {
             className={`tray-cell pressable ${active ? 'on-desk' : ''}`}
             onClick={() => onPick(s)}
           >
-            {src && <StickerImg src={src} size="sm" />}
+            {src && <StickerImg src={src} size="sm" id={s.id} />}
           </button>
         )
       })}

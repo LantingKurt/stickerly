@@ -118,7 +118,7 @@ function LibraryCell({
             : { rotate: tilt(s.id) }
         }
       >
-        {src && <StickerImg src={src} size="sm" />}
+        {src && <StickerImg src={src} size="sm" id={s.id} />}
         {live && src && (
           <div
             className="sticker-light"
@@ -450,7 +450,7 @@ export default function Library({
             }}
           >
             <div className="cell-inner" style={{ transform: `rotate(${tilt(ghost.id)}deg)` }}>
-              <StickerImg src={ghostSrc} size="sm" />
+              <StickerImg src={ghostSrc} size="sm" id={ghost.id} />
             </div>
           </motion.div>,
           document.body,

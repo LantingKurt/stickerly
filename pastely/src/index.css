@@ -338,7 +338,18 @@ button:focus-visible {
   height: 100%;
   transform-style: preserve-3d;
 }
-.cell-inner .diecut-sm { max-width: 76%; max-height: 76%; }
+.sticker-crop {
+  position: relative;
+  display: block;
+  width: 88%;
+  height: 88%;
+  overflow: hidden;
+}
+.cell-inner .diecut-sm,
+.sticker-crop .diecut-sm {
+  max-width: none;
+  max-height: none;
+}
 .cell.picked { box-shadow: inset 0 0 0 2.5px var(--grape); }
 .cell-check {
   position: absolute;
@@ -765,7 +776,8 @@ button:focus-visible {
   box-shadow: inset 0 0 0 2px var(--grape);
   background: rgba(124, 92, 255, 0.12);
 }
-.tray-cell .diecut-sm { max-width: 78%; max-height: 78%; }
+.tray-cell .sticker-crop { width: 86%; height: 86%; }
+.tray-cell .diecut-sm { max-width: none; max-height: none; }
 
 .btn-hold {
   position: relative;
