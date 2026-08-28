@@ -58,11 +58,15 @@ export default function App() {
   async function handleKeep() {
     if (!shot?.cutoutBlob) return
     buzz([10, 40, 10])
-    const saved = await saveSticker(shot.cutoutBlob)
-    await refresh()
-    setNewId(saved.id)
-    setShot(null)
-    setTab('library')
+    try {
+      const saved = await saveSticker(shot.cutoutBlob)
+      await refresh()
+      setNewId(saved.id)
+      setShot(null)
+      setTab('library')
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   async function handleDelete(s: Sticker) {
@@ -116,7 +120,10 @@ export default function App() {
             <button
               key={t}
               className={`tab pressable ${tab === t ? 'active' : ''}`}
-              onClick={() => setTab(t)}
+                  onClick={() => {
+                    setTab(t)
+                    if (t === 'library') void refresh()
+                  }}
               aria-label={t === 'library' ? 'Library' : 'Camera'}
             >
               {tab === t && (

@@ -1,5 +1,5 @@
 {
-  "installCommand": "npm install --prefix pastely",
+  "installCommand": "npm ci --prefix pastely",
   "buildCommand": "npm run build --prefix pastely",
   "outputDirectory": "pastely/dist",
   "framework": "vite"
