@@ -5504,7 +5504,7 @@ netstat -ano | findstr ":5173 :5174"; Write-Host '--- 5173 http ---'; try { (Inv
 ```
 
 ```
-  TCP    0.0.0.0:5173           0.0.0.0:0              LISTENING       21048
+]633;C  TCP    0.0.0.0:5173           0.0.0.0:0              LISTENING       21048
   TCP    0.0.0.0:5174           0.0.0.0:0              LISTENING       21668
   TCP    [::]:5173              [::]:0                 LISTENING       21048
   TCP    [::]:5174              [::]:0                 LISTENING       21668
@@ -5520,6 +5520,128 @@ The underlying connection was closed: The connection was closed unexpectedly.
 The underlying connection was closed: An unexpected error occurred on a send.
 --- 5174 https ---
 The underlying connection was closed: An unexpected error occurred on a send.
-
+]633;C  TCP    0.0.0.0:5173           0.0.0.0:0              LISTENING       21048
+  TCP    0.0.0.0:5174           0.0.0.0:0              LISTENING       21668
+  TCP    [::]:5173              [::]:0                 LISTENING       21048
+  TCP    [::]:5174              [::]:0                 LISTENING       21668
+  TCP    [::1]:5174             [::1]:53119            ESTABLISHED     21668
+  TCP    [::1]:5174             [::1]:64586            ESTABLISHED     21668
+  TCP    [::1]:49670            [::1]:5174             TIME_WAIT       0
+  TCP    [::1]:53119            [::1]:5174             ESTABLISHED     14760
+  TCP    [::1]:60667            [::1]:5174             TIME_WAIT       0
+  TCP    [::1]:64586            [::1]:5174             ESTABLISHED     14760
+--- 5173 http ---
+The underlying connection was closed: The connection was closed unexpectedly.
+--- 5173 https ---
+The underlying connection was c
+… (output truncated)
 ```
 </details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+Port 5173 is occupied by PID 21048. A leftover Vite process or PowerShell HTTPS conflict is likely blocking localhost.
+
+React is currently serving on port 5174 over HTTPS. Port 5173 is occupied by a stale leftover process. Localhost:5173 therefore hits the dead process instead of the active server. Vercel works because it serves a clean HTTPS production URL with baked-in environment variables. Even the active port requires HTTPS.
+
+End the stale process to free port 5173. Alternatively, use the active React server on port 5174.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+Localhost is the wrong URL and the wrong process. Vercel is a single HTTPS deploy, so it looks fine.
+
+Your React `npm run dev` could not bind **5173** because something else already owns it (PID 21048). Vite moved to **5174** and is HTTPS-only:
+
+**https://localhost:5174/**
+
+If you open `http://localhost:5173` or `https://localhost:5173`, you hit the leftover server. That connection dies. PowerShell got “connection was closed unexpectedly” on 5173.
+
+Vercel works because it is not using that port, not using the self-signed cert, and it already has `VITE_SUPABASE_*` baked into the build.
+
+Use **https://localhost:5174/** and accept the certificate warning once. To get 5173 back, stop the old process (Task Manager, PID 21048, or close the other Vite terminal), then run `npm run dev` again.
+
+---
+
+_**User**_
+
+<timestamp>Friday, Aug 28, 2026, 10:28 PM (UTC+8)</timestamp>
+<system_notification>
+The following task has finished. If you were already aware, ignore this notification and do not restate prior responses.
+
+<task>
+kind: shell
+status: success
+task_id: 632275
+title: See what is bound to 5173 and 5174
+tool_call_id: call-f8164033-9b97-406d-ae9d-359587826a68-205
+fc_6ec6ae69-7790-9420-847c-03a3f30dea39_0
+output_path: C:\Users\Admin\.cursor\projects\c-Users-Admin-Downloads-Github-Repos-pastely\terminals\632275.txt
+</task>
+</system_notification>
+<user_query>Briefly inform the user about the task result and perform any follow-up actions (if needed). If there's no follow-ups needed, don't explicitly say that.</user_query>
+
+---
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+Preparing a brief update on the port check.
+
+Ports 5173 and 5174 are both listening. No follow-up actions are needed.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+The port check matched that: **5173** and **5174** are both listening. React is on **https://localhost:5174/**. 5173 is the leftover process, which is why that URL dies.
+
+---
+
+_**User**_
+
+Locate to me the env file
+
+---
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+I need to locate the env file.
+
+The env file is at pastely/.env.local.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\.env.local</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\.env.example</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+The environment file path will be provided clearly.
+
+The file is `env.local`. The full key will not be dumped.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+The one Vite actually loads locally is:
+
+`C:\Users\Admin\Downloads\Github Repos\pastely\pastely\.env.local`
+
+The template (no key filled in) is:
+
+`C:\Users\Admin\Downloads\Github Repos\pastely\pastely\.env.example`
+
+Both sit in the React app folder (`pastely/`), not the repo root. `.env.local` is gitignored. For Vercel, copy those same two variable names into the project’s Environment Variables, not into a file on the server.
