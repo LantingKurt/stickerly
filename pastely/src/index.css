@@ -606,13 +606,15 @@ button:focus-visible {
   pointer-events: none;
 }
 .golden-ticket .gt-glare {
+  z-index: 2;
   opacity: 0;
-  transition: opacity 180ms var(--ease-out);
+  mix-blend-mode: normal;
+  background: radial-gradient(circle 130px at 30% 22%, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.16) 40%, transparent 70%);
+  transition: opacity 160ms var(--ease-out);
 }
-@media (hover: hover) and (pointer: fine) {
-  .ticket-field:hover .golden-ticket .gt-glare {
-    opacity: 1;
-  }
+.golden-ticket:hover .gt-glare,
+.golden-ticket:focus-visible .gt-glare {
+  opacity: 1;
 }
 .golden-ticket:active .gt-sway { animation-play-state: paused; }
 
@@ -859,5 +861,5 @@ button:focus-visible {
   .cell-inner { transform: none !important; }
   .play-sticker { transition: none; }
   .gt-sway, .gt-sheen { animation: none; }
-  .gt-sheen, .gt-glare, .sticker-light::before { display: none; }
+  .gt-sheen, .sticker-light::before, .sticker-light .gt-glare { display: none; }
 }

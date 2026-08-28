@@ -27,7 +27,7 @@ export function useTicketTilt(field: RefObject<HTMLElement | null>) {
   const moveY = useTransform(sy, [-1, 1], [-6, 6])
   const glareX = useTransform(sx, [-1, 1], [18, 82])
   const glareY = useTransform(sy, [-1, 1], [12, 88])
-  const glare = useMotionTemplate`radial-gradient(circle 36% at ${glareX}% ${glareY}%, rgba(255, 255, 255, 0.5), rgba(255, 244, 210, 0.18) 28%, rgba(255, 255, 255, 0) 68%)`
+  const glare = useMotionTemplate`radial-gradient(circle 130px at ${glareX}% ${glareY}%, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.18) 38%, rgba(255, 255, 255, 0) 70%)`
   const stickerGlare = useMotionTemplate`radial-gradient(circle 8% at ${glareX}% ${glareY}%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 70%)`
 
   function track(e: PE) {
@@ -97,8 +97,8 @@ export default function GoldenTicket({ onRedeem }: Props) {
                 </span>
                 <span className="gt-sub">Good for one perfectly cut sticker</span>
               </span>
-              {!reduce && <span className="gt-sheen" aria-hidden />}
-              {!reduce && <motion.span className="gt-glare" style={{ background: glare }} aria-hidden />}
+              <span className="gt-sheen" aria-hidden />
+              <motion.span className="gt-glare" style={reduce ? undefined : { background: glare }} aria-hidden />
             </span>
           </span>
         </motion.button>
