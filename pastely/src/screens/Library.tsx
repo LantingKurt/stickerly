@@ -160,6 +160,7 @@ export default function Library({
   const reduce = useReducedMotion()
   const [picked, setPicked] = useState<Set<string>>(() => new Set())
   const [armed, setArmed] = useState(false)
+  const [ticketOpen, setTicketOpen] = useState(false)
   const [dragId, setDragId] = useState<string | null>(null)
   const [ghostBox, setGhostBox] = useState({ w: 0, h: 0 })
   const gridRef = useRef<HTMLDivElement>(null)
@@ -370,6 +371,15 @@ export default function Library({
           {!editing && stickers.length > 0 && <span className="lib-count">{stickers.length}</span>}
         </div>
         <div className="lib-head-actions">
+          {!editing && (
+            <button
+              className="icon-btn pressable"
+              aria-label="Golden ticket"
+              onClick={() => setTicketOpen(true)}
+            >
+              <Icon name="sparkles" size={18} />
+            </button>
+          )}
           {stickers.length > 0 && (
             <button
               className="text-btn pressable"
@@ -431,6 +441,36 @@ export default function Library({
           </button>
         </div>
       )}
+
+      <AnimatePresence>
+        {ticketOpen && (
+          <motion.div
+            key="ticket"
+            className="ticket-layer"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: reduce ? 0.12 : 0.2 }}
+          >
+            <div className="scrim" onClick={() => setTicketOpen(false)} />
+            <div className="ticket-modal">
+              <button
+                className="play-close pressable"
+                aria-label="Close"
+                onClick={() => setTicketOpen(false)}
+              >
+                <Icon name="close" size={18} />
+              </button>
+              <GoldenTicket
+                onRedeem={() => {
+                  setTicketOpen(false)
+                  onCamera()
+                }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {ghost && ghostSrc &&
         createPortal(
