@@ -5221,27 +5221,29 @@ _**Agent (grok-4.6)**_
 
 <think><details><summary>Thought Process</summary>
 The user wants to know how to redeploy Vercel for their changes.
+
+Checking their Vercel setup to provide exact redeployment steps. They likely need to push to main if GitHub is connected, or use the Vercel CLI. They must also set the Supabase environment variables.
 </details></think>
 
 _**Agent (grok-4.6)**_
 
 <tool-use data-tool-type="search" data-tool-name="glob_file_search"><details>
-<summary>Tool use: **glob_file_search** • Searched codebase "" • **0** results in **0** directories</summary>
+<summary>Tool use: **glob_file_search** • Searched codebase "" • **0** results in **1** directory</summary>
 
-No results found
+Directory: **``** (0 files)
 </details></tool-use>
 
 _**Agent (grok-4.6)**_
 
 <tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
-<summary>Tool use: **read_file_v2** • Read file: </summary>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\vercel.json</summary>
 
 </details></tool-use>
 
 _**Agent (grok-4.6)**_
 
 <tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
-<summary>Tool use: **read_file_v2** • Read file: </summary>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\.cursor\projects\c-Users-Admin-Downloads-Github-Repos-pastely\terminals\1.txt</summary>
 
 </details></tool-use>
 
@@ -5252,4 +5254,170 @@ _**Agent (grok-4.6)**_
 ```bash
 git status -sb; git log -1 --oneline; npx vercel --version 2>$null
 ```
+
+```
+]633;C## HEAD (no branch)
+ M .specstory/history/2026-08-28_12-42-24Z-automated-workflow-for-hackathon.md
+ M .specstory/statistics.json
+ D index.html
+ M package-lock.json
+ M package.json
+ D public/icon.svg
+ D public/manifest.webmanifest
+ D src/cutout.js
+ D src/fallback-cutout.js
+ D src/library.js
+ D src/main.js
+ D src/style.css
+ D vite.config.js
+a798b8d Update Vercel configuration for build commands and output directory; enhance sticker management with Supabase integration and error handling in the application. Add example environment file and SQL for stickers table.
+59.9.1
+
+```
 </details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+The repository is on a detached HEAD. Git push from here will not update main. Checkout main first.
+
+Two ways to redeploy Vercel:
+
+- Push to the connected GitHub branch (main). Vercel auto-deploys.
+- Run `vercel --prod` from the CLI.
+
+Also need to set the required environment variables.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+Vercel rebuilds from **git**, not from your local `npm run dev`. The site updates when the new commit is on the branch Vercel watches, usually `main`.
+
+**If the GitHub repo is already connected to Vercel**
+
+1. Get off detached HEAD and onto `main`.
+2. Commit the React/storage changes.
+3. Push:
+
+```powershell
+git switch main
+git add -A
+git commit -m "Deploy React app and Supabase stickers"
+git push origin main
+```
+
+Then open the Vercel dashboard → the project → **Deployments**. The new push should show as Building, then Ready.
+
+**One-off from the CLI** (same folder as `vercel.json`):
+
+```powershell
+npx vercel --prod
+```
+
+**This deploy also needs**
+
+In Vercel → Project → Settings → Environment Variables, add:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
+Use the same values as `pastely/.env.local`. Vite bakes those in at **build** time, so add them, then redeploy. The `stickers` table must already exist (run `pastely/supabase/stickers.sql` in the SQL editor if you have not).
+
+You are currently **not on a branch** (`HEAD (no branch)`), so a normal `git push` will not update Vercel until you `git switch main` and push from there.
+
+---
+
+_**User**_
+
+<timestamp>Friday, Aug 28, 2026, 10:05 PM (UTC+8)</timestamp>
+<system_notification>
+The following task has finished. If you were already aware, ignore this notification and do not restate prior responses.
+
+<task>
+kind: shell
+status: success
+task_id: 632274
+title: Check git state and Vercel CLI
+tool_call_id: call-466025ed-887a-4221-93af-f2579cc7db95-197
+fc_aa728368-e7c7-942c-81d0-6a320c8e3b18_3
+output_path: C:\Users\Admin\.cursor\projects\c-Users-Admin-Downloads-Github-Repos-pastely\terminals\632274.txt
+</task>
+</system_notification>
+<user_query>Briefly inform the user about the task result and perform any follow-up actions (if needed). If there's no follow-ups needed, don't explicitly say that.</user_query>
+
+---
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+Checking git status and Vercel CLI status.
+
+The previous message already included this information. Restating the full Vercel guide is unnecessary. Verifying the Vercel CLI version is optional.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\.cursor\projects\c-Users-Admin-Downloads-Github-Repos-pastely\terminals\632274.txt</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+Vercel CLI version 59.9.1 is available.
+
+The repository remains on a detached HEAD.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+Git is still detached, with the HTML-app deletions uncommitted. Vercel CLI is available (59.9.1). A deploy still needs those changes on `main` and a `git push`.
+
+---
+
+_**User**_
+
+for the automation to run on the other laptop, what meeds to be run
+
+---
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+The user wants to know what must be run on the other laptop to replicate the hackathon git sync automation.
+
+The GitHub Action runs automatically on GitHub and does not need to be run on other laptops. The local automation script is `scripts/hackathon-sync.ps1`. The other laptop needs to clone the repository and execute that PowerShell script.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\scripts\hackathon-sync.ps1</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+The GitHub Action is already present in the repository. No additional setup is needed on the other laptop.
+
+The local loop must be started on each laptop.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+The GitHub Action does not run on anyone’s laptop. Each machine that should auto `git add` / commit / pull / push has to start the local script itself.
+
+On the other laptop, in this repo:
+
+```powershell
+git pull
+.\scripts\hackathon-sync.ps1
+```
+
+Leave that terminal open. Default is every 1 minute: `git add .`, commit if dirty, fetch, merge-pull, push.
+
+If that laptop is Mac or Linux, run it from PowerShell, or from Git Bash after a clone/pull of `main`. Same file: `scripts/hackathon-sync.ps1`.
+
+They need git already set up (`user.name`, `user.email`, access to `https://github.com/u1yuan/pastely.git`). If they never run that script, they only get updates with a normal `git pull`.
