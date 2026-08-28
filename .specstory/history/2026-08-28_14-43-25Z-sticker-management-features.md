@@ -3655,8 +3655,16 @@ glare spread is too much
 
 _**Agent (grok-4.6)**_
 
+<think><details><summary>Thought Process</summary>
+The sticker glare effect needs to be more localized. Currently it spreads too broadly across the entire sticker.
+
+Tightening the radial gradient will create a sharper, smaller highlight that tracks the pointer instead of covering the whole sticker. I'll examine the current stickerGlare and sheen CSS.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
 <tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
-<summary>Tool use: **read_file_v2** • Read file: </summary>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\components\GoldenTicket.tsx</summary>
 
 </details></tool-use>
 
@@ -3664,15 +3672,280 @@ _**Agent (grok-4.6)**_
 
 <tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
 <summary>Tool use: **ripgrep_raw_search**</summary>
-Status: **loading**
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "C:\\Users\\Admin\\Downloads\\Github Repos\\pastely\\pastely\\src",
+  "pattern": "stickerGlare|sticker-light|gt-sheen|gt-glare"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "C:\\Users\\Admin\\Downloads\\Github Repos\\pastely\\pastely\\src",
+  "pattern": "stickerGlare|sticker-light|gt-sheen|gt-glare",
+  "topFiles": [
+    {
+      "matchCount": 4,
+      "uri": "pastely\\src\\components\\PlaySticker.tsx"
+    },
+    {
+      "matchCount": 9,
+      "uri": "pastely\\src\\index.css"
+    },
+    {
+      "matchCount": 4,
+      "uri": "pastely\\src\\screens\\Library.tsx"
+    },
+    {
+      "matchCount": 4,
+      "uri": "pastely\\src\\components\\GoldenTicket.tsx"
+    }
+  ],
+  "totalFiles": 4,
+  "totalMatches": 21
+}
+```
+Status: **completed**
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+The `gt-sheen` sweep with its full-sticker inset and 16% white band is washing the entire sticker with iridescence. The mix-blend overlay on the 32% radius gradient also covers too much area.
+
+A tighter localized spot will replace the full-sticker sweep. A small radial-gradient circle at the target position will provide the white highlight. The overlay blend will be dropped to prevent iridescence from spreading.
+
+The full-surface `gt-sheen` sweep will be removed from PlaySticker and Library sticker-light entirely. The white glare will become a small `circle 14%` radial gradient at the target position. The blend mode may switch to normal white or soft-light.
+
+GoldenTicket sheen remains unchanged. The `.gt-sheen` span will be hidden or removed from stickerlight as a CSS fallback.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+The highlight is washing the whole sticker. I’ll shrink it to a small pointer spot and drop the full-surface sheen.
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\components\GoldenTicket.tsx</summary>
 
 </details></tool-use>
 
 _**Agent (grok-4.6)**_
 
 <tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
-<summary>Tool use: **edit_file_v2**</summary>
-Status: **loading**
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\components\PlaySticker.tsx</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\screens\Library.tsx</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\index.css</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+A 14% circle hotspot follows the pointer.
+
+Removed the sweeping sheen that was washing the entire surface.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+The wash across the whole sticker is gone. Hover should now show a small highlight that follows the pointer, not a bright bloom over the logo.
+
+---
+
+_**User**_
+
+make the space take larger on stickers 
+
+---
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+Sticker cells in the library grid should take up more space.
+
+Stickers currently fill only 15–20% of each cell. I'll inspect the CSS for cell-inner and diecut-sm sizing.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "C:\\Users\\Admin\\Downloads\\Github Repos\\pastely\\pastely\\src",
+  "pattern": "cell-inner|diecut-sm|max-width: 76|sticker-grid"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "C:\\Users\\Admin\\Downloads\\Github Repos\\pastely\\pastely\\src",
+  "pattern": "cell-inner|diecut-sm|max-width: 76|sticker-grid",
+  "topFiles": [
+    {
+      "matchCount": 7,
+      "uri": "pastely\\src\\index.css"
+    },
+    {
+      "matchCount": 3,
+      "uri": "pastely\\src\\screens\\Library.tsx"
+    }
+  ],
+  "totalFiles": 2,
+  "totalMatches": 10
+}
+```
+Status: **completed**
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\components\StickerImg.tsx</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+Sticker PNGs likely contain transparent padding, similar to the playground issue. Library cells cap sticker size at 76% of the cell.
+
+The default object-fit shows the full padded PNG, so the artwork appears small. Raising the max-width would help slightly, but the padding still shrinks the visible sticker. Cropping via CSS object-position would require knowing the content bounding box, which the library does not compute.
+
+CSS object-view-box is too poorly supported. Reusing the silhouette tracer for ten library cells is too heavy. A simple object-fit: cover would crop badly. The cutout PNGs are full photos with the sticker isolated, so a content-aware crop is required.
+
+Reusing the silhouette cache for library cells is viable since the library renders first. CSS object-view-box is unreliable on iOS Safari. Heavy clipping or scaling approaches are too complex. The simplest fix is to set the image to fill its container after tracing.
+
+A wrapper div with overflow hidden and CSS sprite crop offsets is the chosen approach. The image scales to the content ratio and shifts by negative offsets to hide padding. For the library, the plan is to bump the CSS max-width to 94% and apply this crop inside StickerImg when the size is small.
+
+StickerImg now accepts a `crop` prop and a `cropKey`. When enabled, it traces the silhouette and applies the content bounding box as a CSS crop. This makes both the library and the tray display larger visible stickers.
+
+The crop wrapper will be sized to 92% and hide overflow. The diecut filter will remain compatible because dilation scales with the displayed image. The library grid is the primary target, though the tray can receive the same treatment. The crop prop will be wired into the library cell component.
+
+The crop may briefly flash an uncropped image before snapping into place. The math confirms why the visible sticker is so small: a 76% cap on a padded PNG leaves only about 15–20% of the cell for the actual artwork. Raising the CSS percentage alone is insufficient; the crop is the real fix.
+
+The playground will stay unchanged. Old silhouette data may lack contentX, so a fallback to zero is needed. The crop wrapper’s overflow hidden could clip the diecut white border, but the existing 6% content padding should prevent that. A 7px radius on the enlarged sticker remains acceptable. Next step is to review how StickerImg is used in the library and tray components.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "C:\\Users\\Admin\\Downloads\\Github Repos\\pastely\\pastely\\src",
+  "pattern": "StickerImg"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "C:\\Users\\Admin\\Downloads\\Github Repos\\pastely\\pastely\\src",
+  "pattern": "StickerImg",
+  "topFiles": [
+    {
+      "matchCount": 3,
+      "uri": "pastely\\src\\screens\\Library.tsx"
+    },
+    {
+      "matchCount": 1,
+      "uri": "pastely\\src\\App.tsx"
+    },
+    {
+      "matchCount": 2,
+      "uri": "pastely\\src\\components\\StickerTray.tsx"
+    },
+    {
+      "matchCount": 2,
+      "uri": "pastely\\src\\screens\\Preview.tsx"
+    },
+    {
+      "matchCount": 1,
+      "uri": "pastely\\src\\components\\StickerImg.tsx"
+    }
+  ],
+  "totalFiles": 5,
+  "totalMatches": 9
+}
+```
+Status: **completed**
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\lib\stickerSvg.ts</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+StickerImg will crop to the content bounding box by default for small sizes. The sticker ID will serve as the cache key.
+
+Large preview images remain uncropped. The crop applies only when an `id` prop is provided; otherwise the image renders at full size. StickerImg will implement crop-fill.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+Library cells are showing the full padded PNG, so the artwork looks tiny. I’ll crop to the sticker and let it fill the cell.
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\components\StickerImg.tsx</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\components\StickerTray.tsx</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\screens\Library.tsx</summary>
 
 </details></tool-use>
 
