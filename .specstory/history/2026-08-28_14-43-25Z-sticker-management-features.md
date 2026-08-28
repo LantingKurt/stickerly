@@ -3119,14 +3119,313 @@ preview of sticker is small. make it bigger so we can view the hover feature
 
 _**Agent (grok-4.6)**_
 
+<think><details><summary>Thought Process</summary>
+The sticker preview needs to be enlarged so the hover tilt and glare effects are clearly visible.
+
+The sticker is only 5–10% of the canvas despite the 48% fit limit. The silhouette tracing likely leaves large empty margins. I will inspect the PlaySticker fit() logic.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
 <tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
-<summary>Tool use: **read_file_v2** • Read file: </summary>
+<summary>Tool use: **read_file_v2**</summary>
+Offset 360 is beyond file length (343 lines)
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\lib\stickerSvg.ts</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+The fit function uses the full natural PNG dimensions rather than the opaque bounding box. This likely explains why the sticker preview appears too small.
+
+The 48% cap should make a centered sticker look fairly large. The screenshot shows it only 5–10% of the canvas. The actual sticker pixels may be a small region inside that padded canvas.
+
+The 0.48 cap is multiplied by the visible sticker portion of the oversized PNG. A 1024px-wide canvas with a small opaque subject shrinks the visible area to roughly 9.6% of the desk. This matches the 5–10% observation. The fix needs to target the visible sticker size directly.
+
+Raising the 0.48 cap to about 0.78 would enlarge the preview immediately. The proper fix is fitting to the silhouette’s opaque bounding box so the sticker fills the desk. I’ll examine the silhouette contour to implement that.
+
+A quick bump to 0.82 would enlarge the preview immediately. The proper fix is to derive the sticker’s opaque bounding box from the mask and scale the display size to that content area instead of the full PNG canvas.
+
+Scaling to the opaque bounding box risks clipping transparent padding and expanding the hover area. The 0.48 cap is unexpectedly small; a 5–10% preview is far below the expected 48% of the desk. A direct bump to 0.75–0.85 is the simpler immediate fix.
+
+Simply raising the 0.48 cap to 0.85 would still leave the sticker looking small because transparent padding wastes space. The plan is to compute the opaque bounding box during tracing and store it on the silhouette. The fit function will then scale against that content size instead of the full PNG canvas.
+
+The fit formula will scale the display size by the ratio of the 78% desk cap to the sticker’s opaque bounding box width or height. Converting the bounding box from sample-canvas coordinates back to image coordinates is the next step. The remaining stickerSvg and PlaySticker fit code still needs review.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\components\PlaySticker.tsx</summary>
 
 </details></tool-use>
 
 _**Agent (grok-4.6)**_
 
 <tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
-<summary>Tool use: **read_file_v2** • Read file: </summary>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\lib\stickerSvg.ts</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+The sticker preview target size will be increased to make the hover effect more visible.
+
+A content box will be added to the Silhouette component. The sticker will scale to its opaque bounding box instead of the full image. This prevents transparent padding from shrinking the visible area. The maximum size will be raised to 0.76.
+
+The mask iteration will also compute the opaque bounding box. The sticker scales to fit within a 32-pixel margin of the desk. If the content is small, the wrapper could still grow too large.
+
+The 0.76 cap will apply even to stickers that already fill their PNGs. The transform origin may not match the sticker center if the PNG is not centered, but that is a pre-existing issue.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+The sticker is tiny because it’s sized to the whole PNG, including empty transparent padding. I’ll scale it to the actual artwork so it fills the desk.
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+Invalid arguments:
+path: Required
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+Invalid arguments:
+path: Required
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+Invalid arguments:
+path: Required
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+Invalid arguments:
+path: Required
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+Invalid arguments:
+path: Required
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+Retrying with the correct path parameter.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\lib\stickerSvg.ts</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\lib\stickerSvg.ts</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\lib\stickerSvg.ts</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\components\PlaySticker.tsx</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\components\PlaySticker.tsx</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+Old silhouette cache entries lack contentW, which may explain the small preview.
+
+HMR may preserve the old silhouette cache. A fallback to `svg.width` will prevent `fit` from becoming NaN.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\components\PlaySticker.tsx</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "C:\\Users\\Admin\\Downloads\\Github Repos\\pastely\\pastely\\src",
+  "pattern": "Silhouette|width: 512"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "C:\\Users\\Admin\\Downloads\\Github Repos\\pastely\\pastely\\src",
+  "pattern": "Silhouette|width: 512",
+  "topFiles": [
+    {
+      "matchCount": 5,
+      "uri": "pastely\\src\\components\\PlaySticker.tsx"
+    },
+    {
+      "matchCount": 5,
+      "uri": "pastely\\src\\lib\\stickerSvg.ts"
+    }
+  ],
+  "totalFiles": 2,
+  "totalMatches": 10
+}
+```
+Status: **completed**
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+The preview is cached by sticker ID.
+
+The wrapper will expand to fill the desk. The sticker will center and grow large. Hover will work on the opaque pixels. Overflow on transparent areas is fine.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+The desk preview now sizes to the actual sticker, not the empty transparent padding around it, and it fills more of the canvas.
+
+Open one again and hover it. The tilt and sheen should be easy to see.
+
+---
+
+_**User**_
+
+its working! but the glare is too much tho, enlargen the stickers as welk
+
+---
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+The user wants the glare effect reduced. They also want the stickers enlarged.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+I'll tone the glare down so it stays on the sticker, and bump the desk size again.
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "C:\\Users\\Admin\\Downloads\\Github Repos\\pastely\\pastely\\src",
+  "pattern": "glare|gt-glare|gt-sheen|0\\.78|contentW|radial-gradient\\(circle at"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "C:\\Users\\Admin\\Downloads\\Github Repos\\pastely\\pastely\\src",
+  "pattern": "glare|gt-glare|gt-sheen|0\\.78|contentW|radial-gradient\\(circle at",
+  "topFiles": [
+    {
+      "matchCount": 6,
+      "uri": "pastely\\src\\components\\PlaySticker.tsx"
+    },
+    {
+      "matchCount": 5,
+      "uri": "pastely\\src\\lib\\stickerSvg.ts"
+    },
+    {
+      "matchCount": 8,
+      "uri": "pastely\\src\\index.css"
+    },
+    {
+      "matchCount": 3,
+      "uri": "pastely\\src\\screens\\Library.tsx"
+    },
+    {
+      "matchCount": 8,
+      "uri": "pastely\\src\\components\\GoldenTicket.tsx"
+    }
+  ],
+  "totalFiles": 5,
+  "totalMatches": 30
+}
+```
+Status: **completed**
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\components\PlaySticker.tsx</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\index.css</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\components\GoldenTicket.tsx</summary>
 
 </details></tool-use>
