@@ -287,14 +287,7 @@ export default function Library({
       <div className={`grid-scroll ${dragId ? 'is-locked' : ''}`}>
         {stickers.length === 0 ? (
           <div className="empty-state">
-            <svg width="104" height="104" viewBox="0 0 104 104" fill="none" aria-hidden>
-              <g transform="rotate(-7 52 46)">
-                <rect x="24" y="18" width="56" height="56" rx="14" fill="#FFFDF8" stroke="#211D19" strokeWidth="3" />
-                <path d="M66 74c9-2 15-8 17-16l-17 2v14Z" fill="#EFE9DC" stroke="#211D19" strokeWidth="3" strokeLinejoin="round" />
-                <path d="M48 32l2.6 6.8 6.8 2.6-6.8 2.6-2.6 6.8-2.6-6.8-6.8-2.6 6.8-2.6L48 32Z" fill="#FF4D8D" />
-              </g>
-              <path d="M30 86h44" stroke="#211D19" strokeWidth="3" strokeLinecap="round" strokeDasharray="0.5 8" />
-            </svg>
+            <GoldenTicket onRedeem={onCamera} />
             <div className="empty-title">No stickers yet</div>
             <div>Your sticker book is a blank page.</div>
             <button className="cta pressable" onClick={onCamera}>Take a picture of a sticker</button>

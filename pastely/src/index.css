@@ -794,4 +794,6 @@ button:focus-visible {
   .confetti { display: none; }
   .cell-inner { transform: none !important; }
   .play-sticker { transition: none; }
+  .gt-sway, .gt-sheen { animation: none; }
+  .gt-sheen, .gt-glare { display: none; }
 }
