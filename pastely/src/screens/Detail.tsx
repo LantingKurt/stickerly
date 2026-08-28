@@ -1,5 +1,9 @@
+import { useRef, useState } from 'react'
 import { motion } from 'motion/react'
 import type { Sticker } from '../lib/store'
+import Icon from '../components/Icon'
+import StickerImg from '../components/StickerImg'
+import { buzz } from '../lib/haptics'
 
 interface Props {
   sticker: Sticker
@@ -9,6 +13,22 @@ interface Props {
 }
 
 export default function Detail({ sticker, url, onClose, onDelete }: Props) {
+  const [holding, setHolding] = useState(false)
+  const timer = useRef<number | undefined>(undefined)
+
+  function startHold() {
+    setHolding(true)
+    timer.current = window.setTimeout(() => {
+      buzz(20)
+      onDelete(sticker)
+    }, 1150)
+  }
+
+  function cancelHold() {
+    setHolding(false)
+    window.clearTimeout(timer.current)
+  }
+
   async function share() {
     const file = new File([sticker.blob], 'sticker.png', { type: 'image/png' })
     if (navigator.canShare?.({ files: [file] })) {
@@ -50,16 +70,31 @@ export default function Detail({ sticker, url, onClose, onDelete }: Props) {
       >
         <div className="grabber" />
         <div className="sheet-stage checker">
-          <motion.img layoutId={`sticker-${sticker.id}`} src={url} alt="Sticker" draggable={false} />
+          <StickerImg src={url} size="lg" />
         </div>
-        <p className="sheet-date">
+        <span className="date-chip">
           Saved {new Date(sticker.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
-        </p>
+        </span>
         <div className="sheet-actions">
-          <button className="btn btn-danger" onClick={() => { if (confirm('Delete this sticker?')) onDelete(sticker) }}>
-            Delete
+          <button
+            className={`btn btn-hold ${holding ? 'holding' : ''}`}
+            aria-label="Hold to delete"
+            onPointerDown={startHold}
+            onPointerUp={cancelHold}
+            onPointerLeave={cancelHold}
+            onPointerCancel={cancelHold}
+            onContextMenu={(e) => e.preventDefault()}
+            onKeyDown={(e) => {
+              if (!e.repeat && (e.key === 'Enter' || e.key === ' ')) startHold()
+            }}
+            onKeyUp={cancelHold}
+          >
+            <span className="fill" />
+            <span className="hold-label"><Icon name="trash" size={18} /> Hold to delete</span>
           </button>
-          <button className="btn btn-solid" onClick={share}>Share</button>
+          <button className="btn btn-solid" onClick={share}>
+            <Icon name="share" size={18} /> Share
+          </button>
         </div>
       </motion.div>
     </>
