@@ -337,6 +337,8 @@ export default function PlaySticker({
 function fit(svg: Silhouette | null, deskW: number, deskH: number) {
   if (!svg || !deskW || !deskH) return { dw: 0, dh: 0 }
   const max = Math.min(deskW, deskH) * 0.78
-  const s = Math.min(max / svg.contentW, max / svg.contentH)
+  const cw = svg.contentW || svg.width
+  const ch = svg.contentH || svg.height
+  const s = Math.min(max / cw, max / ch)
   return { dw: svg.width * s, dh: svg.height * s }
 }
