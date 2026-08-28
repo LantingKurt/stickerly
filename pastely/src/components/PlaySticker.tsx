@@ -63,7 +63,6 @@ export default function PlaySticker({
   } | null>(null)
   const lastPop = useRef(0)
   const userMoved = useRef(false)
-  const placedFor = useRef({ w: 0, h: 0 })
   const { rotateX: tiltX, rotateY: tiltY, moveX, moveY, stickerGlare, track, release, reset, reduce: reduceTilt } =
     useTicketTilt(root)
 
@@ -102,8 +101,6 @@ export default function PlaySticker({
     const restX = (deskW - dw) / 2 + offsetX
     const restY = (deskH - dh) / 2 + offsetY
     const first = !placed.current
-    const deskChanged = placedFor.current.w !== deskW || placedFor.current.h !== deskH
-    placedFor.current = { w: deskW, h: deskH }
     if (!first && userMoved.current) return
     placed.current = true
     x.jump(restX)
