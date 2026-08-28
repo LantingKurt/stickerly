@@ -3951,24 +3951,202 @@ _**Agent (grok-4.6)**_
 
 _**Agent (grok-4.6)**_
 
+<think><details><summary>Thought Process</summary>
+Updating StickerImg to crop images when an ID is provided. Using crop fill for small stickers in the library, tray, and ghost views.
+
+Expanding cell-inner to 92% of its cell width. The sticker-crop element will fill that space.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
 <tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
-<summary>Tool use: **edit_file_v2**</summary>
-Status: **loading**
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\components\StickerImg.tsx</summary>
 
 </details></tool-use>
 
 _**Agent (grok-4.6)**_
 
 <tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
-<summary>Tool use: **edit_file_v2**</summary>
-Status: **loading**
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\screens\Library.tsx</summary>
 
 </details></tool-use>
 
 _**Agent (grok-4.6)**_
 
 <tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
-<summary>Tool use: **edit_file_v2**</summary>
-Status: **loading**
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\screens\Library.tsx</summary>
 
 </details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\components\StickerTray.tsx</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\index.css</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\index.css</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+A TypeScript narrowing issue prevents accessing `crop.width` because `crop` is narrowed after `fill` is true.
+
+Checking whether LibraryCell contains another StickerImg instance, since the replacement used replace_all false.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+
+Parameters:
+
+```json
+{
+  "caseInsensitive": false,
+  "path": "C:\\Users\\Admin\\Downloads\\Github Repos\\pastely\\pastely\\src",
+  "pattern": "StickerImg"
+}
+```
+Additional data:
+
+```json
+{
+  "isPruned": true,
+  "outputMode": "content",
+  "path": "C:\\Users\\Admin\\Downloads\\Github Repos\\pastely\\pastely\\src",
+  "pattern": "StickerImg",
+  "topFiles": [
+    {
+      "matchCount": 2,
+      "uri": "pastely\\src\\components\\StickerTray.tsx"
+    },
+    {
+      "matchCount": 3,
+      "uri": "pastely\\src\\screens\\Library.tsx"
+    },
+    {
+      "matchCount": 1,
+      "uri": "pastely\\src\\components\\StickerImg.tsx"
+    },
+    {
+      "matchCount": 1,
+      "uri": "pastely\\src\\App.tsx"
+    },
+    {
+      "matchCount": 2,
+      "uri": "pastely\\src\\screens\\Preview.tsx"
+    }
+  ],
+  "totalFiles": 5,
+  "totalMatches": 9
+}
+```
+Status: **completed**
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+Preparing a brief reply.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+Library stickers now crop to the artwork and fill most of the cell, instead of sitting small in the middle of the checkerboard.
+
+Reload the library. They should look a lot bigger in the grid.
+
+---
+
+_**User**_
+
+1st img is browser, 2nd imsge is on phone, phone is small. fix it
+
+---
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+The sticker preview renders correctly in the browser but appears too small on the phone.
+
+Several possible causes are being considered. The desktop preview may use a fixed-size phone frame while the actual device uses the full viewport. The fit() calculation could be failing on mobile. CSS max-width constraints or incorrect desktop measurements might also be responsible.
+
+The second image is the playground view. The sticker shrinks to roughly 10–15% on phone versus 60% on desktop. This suggests the silhouette trace may fail or fall back to full PNG dimensions on mobile devices.
+
+The `placed.current` guard likely locks the sticker position before the desktop container reaches its true size. On iOS the sheet animates upward, so the desk may briefly measure zero or a small value. Once `placed.current` becomes true, the effect exits and the sticker stays stuck at that initial tiny size.
+
+The ResizeObserver likely fires during the iOS sheet animation, capturing a transient zero or small height. The sticker then locks to those initial dimensions via `fit()` and `jump()`, even after the desk expands to its true size.
+
+The sheet’s `will-change: transform` and vertical slide animation may cause ResizeObserver to report incorrect layout dimensions. The effect could exit early if the desk initially measures zero, then lock the sticker to that wrong size once the container expands.
+
+The global `img { max-width: 100% }` rule is now suspected of shrinking the sticker on mobile. The SVG image or its inner SVG may be constrained by this CSS even though the parent `play-sticker` element carries explicit width and height from `fit()`.
+
+The global `img { max-width: 100% }` rule does not apply to SVG `<image>` elements, so it cannot be shrinking the sticker. The desktop preview is locked to a fixed 430 px width and 920 px height inside the phone frame, while the real iPhone uses the full viewport. A 10% versus 60% size gap is too large to blame on CSS alone, pointing toward a deeper rendering or measurement mismatch on mobile.
+
+The fit() formula is being checked against real numbers. If the silhouette trace returns the full PNG width, the scale factor becomes roughly 0.34 and the sticker shrinks to about 351 pixels. If the trace returns a cropped width around 200 pixels, the scale factor becomes roughly 1.75 and the sticker grows to about 351 pixels. The current code sets dw = contentW * s, which means a full-width fallback would make the sticker far too small.
+
+A stale silhouette cache is ruled out. The phone runs a fresh trace, so missing content dimensions would fall back to the full SVG width and still yield a large sticker. The suspicion remains on the `placed.current` guard and the ResizeObserver measurement timing.
+
+The spring-in sheet should report the full layout size on iOS, so the ResizeObserver theory is weakening. The motion.div scale and enter animation are being reviewed. A 14-degree rotateX with 900-pixel perspective is too slight to explain a tenfold size drop. If the silhouette trace fails on mobile, it falls back to a 512-pixel square, which would make the sticker far too small.
+
+A new possibility is that the blob URL image itself contains no alpha channel. If the cutout failed and the original photo was saved instead, the silhouette trace would detect the full image bounds. The sticker would then scale to roughly 90 percent of the desk width, making it far too small.
+
+The subject is a photo of a sticker on a table rather than a tight cutout. The same full-frame source would appear small on both devices. The larger gap between desktop and phone likely comes from differing desk aspect ratios or container heights.
+
+Desktop and iPhone desk heights are nearly identical, so the size gap is not caused by a smaller container. The focus is shifting to whether iOS `getBoundingClientRect` returns the visual size of the transformed sheet rather than the true layout size.
+
+The ResizeObserver callback reads `el.getBoundingClientRect()` directly into the `desk` state. Because the sheet only translates vertically, the measured width and height should remain unchanged. The remaining suspect is iOS visual viewport zoom.
+
+A new theory points to an iOS-specific SVG rendering quirk. The blob URL image inside the SVG viewBox may not scale to the crop dimensions. It could instead render at its intrinsic 1× size in the corner, making the sticker look tiny.
+
+A new suspect is the diecut SVG filter. On iOS, CSS filters referencing SVG filters with objectBoundingBox percentages can cause Safari to render a tiny or clipped bitmap. The filter applies a 140% width and height with negative offsets, which can collapse the filtered region and make the sticker appear much smaller on the phone.
+
+The diecut filter is confirmed active on the phone because the white border is visible. The sticker is simply rendered at a tiny size. The container dimensions are likely correct, but the SVG inside may not be filling that space properly.
+
+The CSS confirms the SVG scales to fill its container, and the parent div has explicit width and height from the motion component. A late SVG load causing a zero width is ruled out, since the component would not render at all in that case. The motion transform values are also being checked for potential iOS scaling issues.
+
+The fit formula is being checked against real camera-photo dimensions. Even a 4032-pixel-wide source would yield a sticker roughly 90 percent of the desk width. A full-frame content box would still be large. The shrinkage must come from something else.
+
+The only way the sticker can end up tiny is if the desk container itself is small when fit() first runs. The placed.current lock-in is the smoking gun for iOS. But getBoundingClientRect should still return the true layout width and height even while the sheet slides downward, because translate does not change those measurements. This makes the ResizeObserver theory less likely.
+
+The sheet is absolutely positioned at 96% height, so it should span the full viewport. A Safari 100% height bug is unlikely because the card appears full-height on the phone.
+
+The flex layout may leave the desk at zero height before the browser finishes laying out the column. ResizeObserver fires early with a tiny height, and the sticker locks to that small size. The SVG caches instantly, so the sticker is placed before the flex container settles, producing a 45-pixel sticker.
+
+The ResizeObserver fires while the sheet is still animating, but `placed.current` prevents refitting once the desk size is locked. Desktop avoids this because the frame is already fully laid out. The fix is to stop locking `placed` permanently, re-run positioning whenever desk dimensions change, and measure after the animation completes. Using `offsetWidth` or `clientWidth` instead of `getBoundingClientRect` is also being considered.
+
+Recentering the sticker on every desk resize would fight user dragging. The fix needs to update position only when the sticker is still at its origin, not after the user has moved it.
+
+The sticker element’s width and height are recalculated every render from the current desk dimensions, so it should grow automatically when the desk expands. The problem is that the position coordinates were locked to the small desk size, leaving the sticker centered at x=2.5 and y=2.5 on a large desk. That would make it fill the container but look tiny and possibly clipped.
+
+The sticker is not merely a small element centered on a large desk. The fit formula implies the desk container itself is only about forty-four pixels wide or tall on the phone. The container is collapsing to a tiny size.
+
+The fit formula always yields a sticker width near ninety percent of the smaller desk dimension. If the desk is large yet the sticker looks tiny, the content width must be zero or the SVG dimensions are missing. A zero content width would make the scale factor infinite and the computed width NaN.
+
+The CSS max-width rule belongs to the sheet stage, not the desk container, so it cannot be shrinking the sticker. The StickerImg component is not used inside PlaySticker, which relies on an SVG image. A viewBox crop would zoom in rather than shrink the element, so it is not the cause either.
+
+The root cause is now clear. The SVG viewBox is set to the full 512×512 PNG dimensions, while the artwork inside is only a small crop. On the phone, the sticker box is large but the artwork renders at its intrinsic small size inside that oversized viewBox. On desktop, the crop viewBox matches the artwork bounds, so the sticker fills the box. This explains why the same code produces a tiny centered sticker on the phone versus a properly scaled one on the browser.
+
+The die-cut outline confirms the sticker sits in the center of a large transparent SVG. The SVG viewBox is set to the full PNG dimensions rather than the artwork crop. On the phone the sticker renders at its intrinsic small size inside that oversized box, while desktop uses a crop viewBox that makes it fill the container.
+
+The diecut outline is tight around the logo, not a full-image rectangle. That rules out an iOS canvas drawing quirk where the mask bbox becomes the entire image. The small sticker size must have another cause.
+
+The diecut path is tight around the sticker, but the SVG viewBox is set to the full PNG dimensions. The sticker element is large and fills the box, yet the artwork inside renders at its intrinsic small size within that oversized viewBox. This creates the exact phone appearance: a large empty box with a tiny diecut sticker sitting in the center.
+
+A canvas opacity theory
+</details></think>
