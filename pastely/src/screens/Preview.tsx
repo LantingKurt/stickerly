@@ -7,13 +7,14 @@ interface Props {
   imageUrl: string | null
   processing: boolean
   cutoutFailed: boolean
+  saving?: boolean
   onKeep: () => void
   onRetake: () => void
 }
 
 const MSGS = ['Peeling the background…', 'Trimming the edges…', 'Almost there…']
 
-export default function Preview({ imageUrl, processing, cutoutFailed, onKeep, onRetake }: Props) {
+export default function Preview({ imageUrl, processing, cutoutFailed, saving, onKeep, onRetake }: Props) {
   const [mi, setMi] = useState(0)
   useEffect(() => {
     if (!processing) return
@@ -64,9 +65,9 @@ export default function Preview({ imageUrl, processing, cutoutFailed, onKeep, on
             : 'Cutout preview'}
       </p>
       <div className="preview-actions">
-        <button className="btn btn-ghost" onClick={onRetake}>Retake</button>
-        <button className="btn btn-solid" onClick={onKeep} disabled={processing}>
-          <Icon name="check" size={20} /> Keep
+        <button className="btn btn-ghost" onClick={onRetake} disabled={processing || saving}>Retake</button>
+        <button className="btn btn-solid" onClick={onKeep} disabled={processing || saving}>
+          <Icon name="check" size={20} /> {saving ? 'Saving…' : 'Keep'}
         </button>
       </div>
     </motion.div>

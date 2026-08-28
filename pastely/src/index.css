@@ -602,8 +602,17 @@ button:focus-visible {
 .gt-glare {
   position: absolute;
   inset: 0;
-  mix-blend-mode: soft-light;
+  mix-blend-mode: overlay;
   pointer-events: none;
+}
+.golden-ticket .gt-glare {
+  opacity: 0;
+  transition: opacity 180ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .ticket-field:hover .golden-ticket .gt-glare {
+    opacity: 1;
+  }
 }
 .golden-ticket:active .gt-sway { animation-play-state: paused; }
 

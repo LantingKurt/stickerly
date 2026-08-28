@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence } from 'motion/react'
 import Camera from './screens/Camera'
 import Preview from './screens/Preview'
@@ -52,6 +52,8 @@ export default function App() {
   const [selected, setSelected] = useState<Sticker | null>(null)
   const [newId, setNewId] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
+  const [keeping, setKeeping] = useState(false)
+  const keepingRef = useRef(false)
 
   const openCamera = useCallback(() => {
     setEditing(false)
@@ -75,6 +77,8 @@ export default function App() {
   }, [stickers, urls])
 
   async function handleCapture(photo: Blob) {
+    keepingRef.current = false
+    setKeeping(false)
     setShot({ cutoutBlob: null, url: URL.createObjectURL(photo), processing: true, failed: false })
     try {
       const cutout = await cutoutSticker(photo)
@@ -86,7 +90,9 @@ export default function App() {
   }
 
   async function handleKeep() {
-    if (!shot?.cutoutBlob) return
+    if (!shot?.cutoutBlob || keepingRef.current) return
+    keepingRef.current = true
+    setKeeping(true)
     buzz([10, 40, 10])
     try {
       const saved = await saveSticker(shot.cutoutBlob)
@@ -95,8 +101,12 @@ export default function App() {
       setShot(null)
       setCameraOpen(false)
       setEditing(false)
+      keepingRef.current = false
+      setKeeping(false)
     } catch (err) {
       console.error(err)
+      keepingRef.current = false
+      setKeeping(false)
     }
   }
 
@@ -156,7 +166,12 @@ export default function App() {
             processing={shot.processing}
             cutoutFailed={shot.failed}
             onKeep={handleKeep}
-            onRetake={() => setShot(null)}
+            saving={keeping}
+            onRetake={() => {
+              keepingRef.current = false
+              setKeeping(false)
+              setShot(null)
+            }}
           />
         )}
       </AnimatePresence>

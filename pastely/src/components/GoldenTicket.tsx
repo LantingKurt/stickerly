@@ -27,7 +27,7 @@ export function useTicketTilt(field: RefObject<HTMLElement | null>) {
   const moveY = useTransform(sy, [-1, 1], [-6, 6])
   const glareX = useTransform(sx, [-1, 1], [18, 82])
   const glareY = useTransform(sy, [-1, 1], [12, 88])
-  const glare = useMotionTemplate`radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0) 55%)`
+  const glare = useMotionTemplate`radial-gradient(circle 36% at ${glareX}% ${glareY}%, rgba(255, 255, 255, 0.5), rgba(255, 244, 210, 0.18) 28%, rgba(255, 255, 255, 0) 68%)`
   const stickerGlare = useMotionTemplate`radial-gradient(circle 8% at ${glareX}% ${glareY}%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 70%)`
 
   function track(e: PE) {
