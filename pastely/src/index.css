@@ -614,6 +614,18 @@ button:focus-visible {
   box-shadow: 0 8px 22px rgba(255, 77, 141, 0.42);
   display: grid;
   place-items: center;
+  overflow: hidden;
+}
+.fab::after {
+  content: '';
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  top: 8%;
+  height: 38%;
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
+  pointer-events: none;
 }
 
 /* ---------- Detail / playground sheet ---------- */
@@ -709,6 +721,17 @@ button:focus-visible {
   mask-repeat: no-repeat;
   -webkit-mask-position: center;
   mask-position: center;
+}
+.sticker-light::before {
+  content: '';
+  position: absolute;
+  width: 26%;
+  height: 18%;
+  left: 20%;
+  top: 14%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 70%);
+  mix-blend-mode: overlay;
 }
 .sticker-light .gt-glare {
   mix-blend-mode: overlay;
@@ -821,5 +844,5 @@ button:focus-visible {
   .cell-inner { transform: none !important; }
   .play-sticker { transition: none; }
   .gt-sway, .gt-sheen { animation: none; }
-  .gt-sheen, .gt-glare { display: none; }
+  .gt-sheen, .gt-glare, .sticker-light::before { display: none; }
 }
