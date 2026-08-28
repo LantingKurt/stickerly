@@ -3,14 +3,18 @@ import { supabase } from './supabase'
 export interface Sticker {
   id: string
   createdAt: number
+  sortOrder: number
   blob: Blob
 }
 
 interface StickerRow {
   id: number
   created_at: string
+  sort_order: number
   png: string
 }
+
+const STICKER_COLS = 'id, created_at, sort_order, png'
 
 function blobToPng(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -41,16 +45,25 @@ function toSticker(row: StickerRow): Sticker {
   return {
     id: String(row.id),
     createdAt: Date.parse(row.created_at),
+    sortOrder: row.sort_order,
     blob: pngToBlob(row.png),
   }
 }
 
 export async function saveSticker(blob: Blob): Promise<Sticker> {
   const png = await blobToPng(blob)
+  const { data: first, error: headError } = await supabase
+    .from('stickers')
+    .select('sort_order')
+    .order('sort_order', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+  if (headError) throw new Error(headError.message)
+  const sort_order = (first?.sort_order ?? 1) - 1
   const { data, error } = await supabase
     .from('stickers')
-    .insert({ png })
-    .select('id, created_at, png')
+    .insert({ png, sort_order })
+    .select(STICKER_COLS)
     .single()
   if (error || !data) throw new Error(error?.message ?? 'Could not save sticker')
   return toSticker(data)
@@ -59,21 +72,35 @@ export async function saveSticker(blob: Blob): Promise<Sticker> {
 export async function listStickers(): Promise<Sticker[]> {
   const { data, error } = await supabase
     .from('stickers')
-    .select('id, created_at, png')
-    .order('created_at', { ascending: false })
+    .select(STICKER_COLS)
+    .order('sort_order', { ascending: true })
+    .order('id', { ascending: false })
   if (error) throw new Error(error.message)
   return (data ?? []).map(toSticker)
 }
 
 export async function deleteSticker(id: string): Promise<void> {
-  const { error } = await supabase.from('stickers').delete().eq('id', Number(id))
+  await deleteStickers([id])
+}
+
+export async function deleteStickers(ids: string[]): Promise<void> {
+  if (ids.length === 0) return
+  const { error } = await supabase.from('stickers').delete().in('id', ids.map(Number))
   if (error) throw new Error(error.message)
+}
+
+export async function reorderStickers(ids: string[]): Promise<void> {
+  const results = await Promise.all(
+    ids.map((id, i) => supabase.from('stickers').update({ sort_order: i }).eq('id', Number(id))),
+  )
+  const failed = results.find((r) => r.error)
+  if (failed?.error) throw new Error(failed.error.message)
 }
 
 export async function getSticker(id: string): Promise<Sticker | undefined> {
   const { data, error } = await supabase
     .from('stickers')
-    .select('id, created_at, png')
+    .select(STICKER_COLS)
     .eq('id', Number(id))
     .maybeSingle()
   if (error) throw new Error(error.message)
