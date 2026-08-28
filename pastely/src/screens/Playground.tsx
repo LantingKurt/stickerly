@@ -43,8 +43,7 @@ export default function Playground({ opened, stickers, urls, onClose, onDelete }
     const el = deskRef.current
     if (!el) return
     const measure = () => {
-      const r = el.getBoundingClientRect()
-      setDesk({ w: r.width, h: r.height })
+      setDesk({ w: el.clientWidth, h: el.clientHeight })
     }
     measure()
     const ro = new ResizeObserver(measure)

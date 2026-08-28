@@ -62,6 +62,8 @@ export default function PlaySticker({
     vy: number
   } | null>(null)
   const lastPop = useRef(0)
+  const userMoved = useRef(false)
+  const placedFor = useRef({ w: 0, h: 0 })
   const { rotateX: tiltX, rotateY: tiltY, moveX, moveY, stickerGlare, track, release, reset, reduce: reduceTilt } =
     useTicketTilt(root)
 
@@ -95,22 +97,30 @@ export default function PlaySticker({
   }, [id, src])
 
   useEffect(() => {
-    if (!svg || deskW === 0 || placed.current) return
-    placed.current = true
+    if (!svg || deskW < 16 || deskH < 16) return
     const { dw, dh } = fit(svg, deskW, deskH)
-    x.jump((deskW - dw) / 2 + offsetX)
-    y.jump((deskH - dh) / 2 + offsetY)
-    if (entering) {
-      if (reduce) {
-        animate(opacity, 1, { duration: 0.18 })
-        scale.jump(1)
+    const restX = (deskW - dw) / 2 + offsetX
+    const restY = (deskH - dh) / 2 + offsetY
+    const first = !placed.current
+    const deskChanged = placedFor.current.w !== deskW || placedFor.current.h !== deskH
+    placedFor.current = { w: deskW, h: deskH }
+    if (!first && userMoved.current) return
+    placed.current = true
+    x.jump(restX)
+    y.jump(restY)
+    if (first) {
+      if (entering) {
+        if (reduce) {
+          animate(opacity, 1, { duration: 0.18 })
+          scale.jump(1)
+        } else {
+          animate(opacity, 1, { duration: 0.2 })
+          animate(scale, 1, { type: 'spring', bounce: 0.2, duration: 0.5 })
+        }
       } else {
-        animate(opacity, 1, { duration: 0.2 })
-        animate(scale, 1, { type: 'spring', bounce: 0.2, duration: 0.5 })
+        opacity.jump(1)
+        scale.jump(1)
       }
-    } else {
-      opacity.jump(1)
-      scale.jump(1)
     }
   }, [svg, deskW, deskH, offsetX, offsetY, entering, reduce, x, y, scale, opacity])
 
@@ -168,6 +178,7 @@ export default function PlaySticker({
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
     onSelect()
     reset()
+    userMoved.current = true
 
     if (pointers.current.size === 1) {
       x.stop?.()
@@ -341,7 +352,7 @@ export default function PlaySticker({
 
 function fit(svg: Silhouette | null, deskW: number, deskH: number) {
   if (!svg || !deskW || !deskH) return { dw: 0, dh: 0 }
-  const max = Math.min(deskW, deskH) * 0.9
+  const max = Math.min(deskW, deskH) * 0.92
   const cw = svg.contentW || svg.width
   const ch = svg.contentH || svg.height
   const s = Math.min(max / cw, max / ch)

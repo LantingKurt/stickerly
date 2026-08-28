@@ -14,10 +14,11 @@ export interface Silhouette {
 const cache = new Map<string, Promise<Silhouette>>()
 
 export function traceSilhouette(cacheKey: string, src: string): Promise<Silhouette> {
-  let pending = cache.get(cacheKey)
+  const key = `${cacheKey}:v3`
+  let pending = cache.get(key)
   if (!pending) {
     pending = trace(src)
-    cache.set(cacheKey, pending)
+    cache.set(key, pending)
   }
   return pending
 }
@@ -47,39 +48,39 @@ async function trace(src: string): Promise<Silhouette> {
 
   const mask = new Uint8Array(cw * ch)
   let opaque = 0
-  let minX = cw
-  let minY = ch
-  let maxX = -1
-  let maxY = -1
   for (let i = 0; i < mask.length; i++) {
     if (pixels[i * 4 + 3] > ALPHA) {
       mask[i] = 1
       opaque++
-      const x = i % cw
-      const y = (i / cw) | 0
-      if (x < minX) minX = x
-      if (y < minY) minY = y
-      if (x > maxX) maxX = x
-      if (y > maxY) maxY = y
     }
   }
-
-  const sx = width / cw
-  const sy = height / ch
-  let contentX = minX * sx
-  let contentY = minY * sy
-  let contentW = maxX < minX ? width : Math.max(1, (maxX - minX + 1) * sx)
-  let contentH = maxY < minY ? height : Math.max(1, (maxY - minY + 1) * sy)
-  const pad = Math.max(contentW, contentH) * 0.06
-  contentX = Math.max(0, contentX - pad)
-  contentY = Math.max(0, contentY - pad)
-  contentW = Math.min(width - contentX, contentW + pad * 2)
-  contentH = Math.min(height - contentY, contentH + pad * 2)
 
   if (opaque < mask.length * 0.01) return rectPath(width, height)
 
   const contour = outline(mask, cw, ch)
   if (!contour || contour.length < 8) return rectPath(width, height)
+
+  const sx = width / cw
+  const sy = height / ch
+  let minX = contour[0][0]
+  let maxX = minX
+  let minY = contour[0][1]
+  let maxY = minY
+  for (const [x, y] of contour) {
+    if (x < minX) minX = x
+    if (y < minY) minY = y
+    if (x > maxX) maxX = x
+    if (y > maxY) maxY = y
+  }
+  let contentX = minX * sx
+  let contentY = minY * sy
+  let contentW = Math.max(1, (maxX - minX) * sx)
+  let contentH = Math.max(1, (maxY - minY) * sy)
+  const pad = Math.max(contentW, contentH) * 0.08
+  contentX = Math.max(0, contentX - pad)
+  contentY = Math.max(0, contentY - pad)
+  contentW = Math.min(width - contentX, contentW + pad * 2)
+  contentH = Math.min(height - contentY, contentH + pad * 2)
 
   const simplified = simplify(contour, 1.4)
   const d = toPath(simplified, sx, sy)
