@@ -1,4 +1,4 @@
-import { useRef, type PointerEvent as PE } from 'react'
+import { useRef, type PointerEvent as PE, type RefObject } from 'react'
 import {
   motion,
   useMotionTemplate,
@@ -12,13 +12,10 @@ interface Props {
   onRedeem?: () => void
 }
 
-// Pointer field tilts the ticket like the talk's golden ticket:
-// damped spring follow, slight parallax, idle sway, foil glare.
-export default function GoldenTicket({ onRedeem }: Props) {
+/** Pointer-follow tilt used by the golden ticket. Same springs, glare, and parallax. */
+export function useTicketTilt(field: RefObject<HTMLElement | null>) {
   const reduce = useReducedMotion()
-  const field = useRef<HTMLDivElement>(null)
-
-  const px = useMotionValue(0) // -1..1 across the field
+  const px = useMotionValue(0)
   const py = useMotionValue(0)
   const spring = { stiffness: 150, damping: 17, mass: 0.7 }
   const sx = useSpring(px, spring)
@@ -48,6 +45,13 @@ export default function GoldenTicket({ onRedeem }: Props) {
     px.set(0)
     py.set(0)
   }
+
+  return { rotateX, rotateY, moveX, moveY, glare, track, release, reset, reduce }
+}
+
+export default function GoldenTicket({ onRedeem }: Props) {
+  const field = useRef<HTMLDivElement>(null)
+  const { rotateX, rotateY, moveX, moveY, glare, track, release, reset, reduce } = useTicketTilt(field)
 
   return (
     <div
