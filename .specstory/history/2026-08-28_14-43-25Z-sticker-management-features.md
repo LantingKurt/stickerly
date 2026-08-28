@@ -3429,3 +3429,273 @@ _**Agent (grok-4.6)**_
 <summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\components\GoldenTicket.tsx</summary>
 
 </details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+Sticker glare is too strong. Need to enlarge the stickers.
+
+The glare gradient is designed for gold foil. Soft-light blending with cream paper creates a hazy white blob. The sheen overlay extends past the sticker edges. The diecut filter dilates both the white border and the glare overlay, amplifying the glow.
+
+The light mask uses the full PNG, so the glare overlay covers the entire play-sticker element including transparent padding. A large radial gradient on that oversized wrapper produces a massive white circle. The diecut filter's drop-shadow and morphological dilation further expand the glow.
+
+The mask is likely failing to clip the overlay, or the soft-light blend is escaping its container. The diecut filter's `feMorphology` dilates the entire SourceAlpha channel, which includes the semi-transparent glare layer. That dilates the white border into a massive halo, matching the screenshot exactly.
+
+The diecut filter should only wrap the SVG image. The light overlay must sit outside that filtered element so it cannot dilate the white border. A tighter sticker-specific glare with lower opacity will replace the current effect.
+
+The diecut filter will move to an inner wrapper so it only affects the sticker image. Sticker glare will use a softer radial gradient with 0.35 white opacity and 32% transparency. The broad sheen overlay will be reduced or removed entirely. Golden tickets will keep their current effect.
+
+A dedicated `stickerGlare` motion template will use 0.28 white opacity and a 36% fade. The sheen overlay will switch to `overlay` blend mode at 70% opacity. Sticker scale will increase from 0.78 to 0.92.
+
+The wrapper scales to the full PNG canvas. A 12px diecut radius on a small visible sticker therefore produces a thick white border. The visible logo remains tiny inside that oversized box.
+
+The sticker still appears too small despite the enlarged wrapper. The content bounding box may still span nearly the full PNG width, or the sticker could be a small percentage of that canvas. The diecut halo and glare blob are likely overwhelming the actual artwork.
+
+The sticker wrapper should be cropped to the content bounding box rather than the full padded PNG canvas. This makes the diecut filter, hover target, and glare overlay apply only to the actual sticker shape. The scale cap will rise to 0.9 of the desk size. The alpha mask will ignore fringe pixels to tighten the silhouette.
+
+The SVG viewBox will be set to the content bounding box so the sticker image is cropped to its actual shape. The image element stays at the origin, and the wrapper scales the cropped viewBox to fill ninety percent of the desk.
+
+Content coordinates will be derived from the mask loop using the same width and height ratios. A small padding buffer will prevent the diecut dilation from clipping at the edges. The sticker SVG rendering logic needs review next.
+
+The sticker-light overlay will be quieted across both the library and the desk. Golden tickets will keep their existing 0.9 glare. A dedicated `stickerGlare` template and tighter CSS opacity will handle the reduced sticker effect.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\lib\stickerSvg.ts</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\components\PlaySticker.tsx</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\screens\Library.tsx</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\index.css</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+I'll crop the viewBox to the sticker's content bounding box so the displayed element is just the sticker itself.
+
+The sticker will be scaled to 0.9 of the desk size. The diecut will move to an inner SVG wrapper so glare doesn't dilate into a large white blob. Softer stickerGlare will be used on PlaySticker and Library cells, and the sheen will be tightened. Content padding will be added to the bounding box calculation.
+
+Library thumbnails will keep their existing contain mask since they are already cell-sized. A fallback guard will handle cached stickers missing the new contentX field.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\lib\stickerSvg.ts</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\lib\stickerSvg.ts</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\lib\stickerSvg.ts</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\components\GoldenTicket.tsx</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\components\GoldenTicket.tsx</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+GoldenTicket's destructure uses glare instead of stickerGlare. That is fine.
+
+PlaySticker will use stickerGlare, crop its viewBox, move the diecut, enlarge the fit, and tighten the CSS sheen. Library will switch to stickerGlare. Fallback setSvg will use contentX and contentY. PlaySticker's hook destructure needs stickerGlare.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\components\PlaySticker.tsx</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\components\PlaySticker.tsx</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\components\PlaySticker.tsx</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\components\PlaySticker.tsx</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\components\PlaySticker.tsx</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\screens\Library.tsx</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\screens\Library.tsx</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\index.css</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+A duplicate `.play-sticker svg` was added.
+
+The old `.play-sticker svg` class may still exist. The sticker-light mask uses the full PNG with `contain`, but the element is now cropped to content. This shrinks the mask and misaligns the glare. The mask should match the same crop.
+
+The mask needs `mask-size` and `mask-position` calculated from the crop ratio. This scales the full PNG to match the cropped overlay dimensions and keeps the glare aligned.
+
+The exact mask-size and mask-position formulas are being derived from the crop ratio. Mask-position percentages are relative to the container minus the mask size, making the calculation tricky.
+
+Overflow clipping was considered but rejected because the glare would remain rectangular rather than following the diecut shape. Moving the light overlay inside the diecut filter would restore the blob effect instead of the octagon. A simpler CSS mask approach is being explored.
+
+Keeping the light overlay as a sibling and clipping it with `overflow: hidden` on the sticker container prevents the glare from spilling outside the crop. The glare gradient was also increased to 32% radius and 0.28 opacity. The mask formula was corrected to scale the full PNG to the crop ratio and offset the position by the crop origin.
+
+The mask sizing and positioning values are now being applied directly as inline styles on the PlaySticker light overlay.
+
+The mask formula was verified against a concrete example. Overflow:hidden on the sticker container will clip stray glow, though it risks cutting the diecut drop-shadow since the inner art can extend beyond the crop.
+
+The overflow:hidden approach on the sticker container was abandoned to preserve the diecut drop-shadow. The mask alignment styles are being added directly to the light overlay.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\components\PlaySticker.tsx</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\components\GoldenTicket.tsx</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+GoldenTicket still uses glare. That is good.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+Glare is quieter now, a small highlight on the sticker instead of that big white bloom. The preview also crops to the artwork and fills more of the desk.
+
+Open one again and hover it. You should see a larger sticker and a much lighter sheen.
+
+---
+
+_**User**_
+
+glare spread is too much
+
+---
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2** • Read file: </summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="unknown" data-tool-name="ripgrep_raw_search"><details>
+<summary>Tool use: **ripgrep_raw_search**</summary>
+Status: **loading**
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+Status: **loading**
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+Status: **loading**
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+Status: **loading**
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+Status: **loading**
+
+</details></tool-use>

@@ -332,7 +332,6 @@ export default function PlaySticker({
           }}
           aria-hidden
         >
-          <span className="gt-sheen" />
           <motion.span className="gt-glare" style={{ background: stickerGlare }} />
         </div>
       )}

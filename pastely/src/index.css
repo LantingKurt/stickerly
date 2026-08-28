@@ -711,10 +711,6 @@ button:focus-visible {
   -webkit-mask-position: center;
   mask-position: center;
 }
-.sticker-light .gt-sheen {
-  inset: 0;
-  opacity: 0.35;
-}
 .sticker-light .gt-glare {
   mix-blend-mode: overlay;
 }

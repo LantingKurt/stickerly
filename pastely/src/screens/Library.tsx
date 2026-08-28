@@ -125,7 +125,6 @@ function LibraryCell({
             style={{ WebkitMaskImage: `url(${src})`, maskImage: `url(${src})` }}
             aria-hidden
           >
-            <span className="gt-sheen" />
             <motion.span className="gt-glare" style={{ background: stickerGlare }} />
           </div>
         )}
