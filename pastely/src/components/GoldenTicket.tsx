@@ -17,28 +17,30 @@ export function useTicketTilt(field: RefObject<HTMLElement | null>) {
   const reduce = useReducedMotion()
   const px = useMotionValue(0)
   const py = useMotionValue(0)
-  const spring = { stiffness: 150, damping: 17, mass: 0.7 }
+  const gx = useMotionValue(50)
+  const gy = useMotionValue(50)
+  const spring = { stiffness: 260, damping: 28, mass: 0.55 }
   const sx = useSpring(px, spring)
   const sy = useSpring(py, spring)
 
-  const rotateX = useTransform(sy, [-1, 1], [14, -14])
-  const rotateY = useTransform(sx, [-1, 1], [-22, 22])
-  const moveX = useTransform(sx, [-1, 1], [-10, 10])
-  const moveY = useTransform(sy, [-1, 1], [-6, 6])
-  const glareX = useTransform(sx, [-1, 1], [6, 94])
-  const glareY = useTransform(sy, [-1, 1], [8, 92])
-  const glare = useMotionTemplate`radial-gradient(circle 48% at ${glareX}% ${glareY}%, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.2) 34%, rgba(255, 255, 255, 0) 68%)`
-  const stickerGlare = useMotionTemplate`radial-gradient(circle 42% at ${glareX}% ${glareY}%, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 70%)`
+  const rotateX = useTransform(sy, [-1, 1], [16, -16])
+  const rotateY = useTransform(sx, [-1, 1], [-20, 20])
+  const moveX = useTransform(sx, [-1, 1], [-8, 8])
+  const moveY = useTransform(sy, [-1, 1], [-5, 5])
+  const glare = useMotionTemplate`radial-gradient(circle 20% at ${gx}% ${gy}%, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.32) 32%, rgba(255, 255, 255, 0) 68%)`
+  const stickerGlare = useMotionTemplate`radial-gradient(circle 22% at ${gx}% ${gy}%, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 70%)`
 
   function track(e: PE) {
     if (reduce) return
     const el = e.currentTarget instanceof HTMLElement ? e.currentTarget : field.current
     if (!el) return
     const r = el.getBoundingClientRect()
-    const w = r.width || 1
-    const h = r.height || 1
-    px.set(Math.max(-1, Math.min(1, ((e.clientX - r.left) / w) * 2 - 1)))
-    py.set(Math.max(-1, Math.min(1, ((e.clientY - r.top) / h) * 2 - 1)))
+    const x = Math.max(0, Math.min(1, (e.clientX - r.left) / (r.width || 1)))
+    const y = Math.max(0, Math.min(1, (e.clientY - r.top) / (r.height || 1)))
+    gx.set(x * 100)
+    gy.set(y * 100)
+    px.set(x * 2 - 1)
+    py.set(y * 2 - 1)
   }
 
   function release(e: PE) {
@@ -54,8 +56,8 @@ export function useTicketTilt(field: RefObject<HTMLElement | null>) {
 }
 
 export default function GoldenTicket({ onRedeem }: Props) {
-  const ticket = useRef<HTMLButtonElement>(null)
-  const { rotateX, rotateY, moveX, moveY, glare, track, release, reset, reduce } = useTicketTilt(ticket)
+  const hit = useRef<HTMLButtonElement>(null)
+  const { rotateX, rotateY, glare, track, release, reset, reduce } = useTicketTilt(hit)
 
   return (
     <div className="ticket-field">
@@ -73,35 +75,39 @@ export default function GoldenTicket({ onRedeem }: Props) {
         }
       >
         <motion.button
-          ref={ticket}
+          ref={hit}
           type="button"
-          className="golden-ticket"
+          className="gt-hit"
           onClick={onRedeem}
           aria-label="Golden ticket — take a picture of a sticker"
-          style={reduce ? undefined : { rotateX, rotateY, x: moveX, y: moveY }}
-          whileTap={reduce ? undefined : { scale: 0.96 }}
           onPointerDown={track}
           onPointerMove={track}
           onPointerUp={release}
           onPointerLeave={reset}
           onPointerCancel={reset}
+          whileTap={reduce ? undefined : { scale: 0.96 }}
         >
-          <span className="gt-sway">
-            <span className="gt-body">
-              <span className="gt-stub">
-                <span className="gt-stub-text">Admit one</span>
-              </span>
-              <span className="gt-main">
-                <span className="gt-kicker">Pastely</span>
-                <span className="gt-title">
-                  Golden Ticket <span className="gt-star">✦</span>
+          <motion.span
+            className="golden-ticket"
+            style={reduce ? undefined : { rotateX, rotateY }}
+          >
+            <span className="gt-sway">
+              <span className="gt-body">
+                <span className="gt-stub">
+                  <span className="gt-stub-text">Admit one</span>
                 </span>
-                <span className="gt-sub">Good for one perfectly cut sticker</span>
+                <span className="gt-main">
+                  <span className="gt-kicker">Pastely</span>
+                  <span className="gt-title">
+                    Golden Ticket <span className="gt-star">✦</span>
+                  </span>
+                  <span className="gt-sub">Good for one perfectly cut sticker</span>
+                </span>
+                <span className="gt-sheen" aria-hidden />
+                <motion.span className="gt-glare" style={reduce ? undefined : { background: glare }} aria-hidden />
               </span>
-              <span className="gt-sheen" aria-hidden />
-              <motion.span className="gt-glare" style={reduce ? undefined : { background: glare }} aria-hidden />
             </span>
-          </span>
+          </motion.span>
         </motion.button>
       </motion.div>
     </div>
