@@ -345,6 +345,10 @@ button:focus-visible {
   height: 88%;
   overflow: hidden;
 }
+.sticker-crop img {
+  max-width: none;
+  max-height: none;
+}
 .cell-inner .diecut-sm,
 .sticker-crop .diecut-sm {
   max-width: none;
@@ -763,8 +767,8 @@ button:focus-visible {
 .sticker-tray::-webkit-scrollbar { display: none; }
 .tray-cell {
   flex: none;
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
   border-radius: 14px;
   background: var(--paper-2);
   display: grid;

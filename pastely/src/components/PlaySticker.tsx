@@ -178,7 +178,6 @@ export default function PlaySticker({
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
     onSelect()
     reset()
-    userMoved.current = true
 
     if (pointers.current.size === 1) {
       x.stop?.()
@@ -243,6 +242,7 @@ export default function PlaySticker({
 
     const nx = g.startX + (e.clientX - g.grabX)
     const ny = g.startY + (e.clientY - g.grabY)
+    if (Math.hypot(e.clientX - g.grabX, e.clientY - g.grabY) > 6) userMoved.current = true
     const b = bounds()
     x.jump(rubbered(nx, b.minX, b.maxX, deskW))
     y.jump(rubbered(ny, b.minY, b.maxY, deskH))
