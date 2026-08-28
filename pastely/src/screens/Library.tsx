@@ -58,7 +58,6 @@ export default function Library({
   const [dragId, setDragId] = useState<string | null>(null)
   const [ghostBox, setGhostBox] = useState({ w: 0, h: 0 })
   const gridRef = useRef<HTMLDivElement>(null)
-  const stickersRef = useRef(stickers)
   const editingRef = useRef(editing)
   const dragRef = useRef<Drag | null>(null)
   const orderRef = useRef(stickers.map((s) => s.id))
@@ -68,18 +67,13 @@ export default function Library({
   const ghostY = useMotionValue(0)
   const ghostScale = useMotionValue(1)
 
-  stickersRef.current = stickers
-  orderRef.current = stickers.map((s) => s.id)
-
   useEffect(() => {
     editingRef.current = editing
   }, [editing])
 
   useEffect(() => {
-    if (editing) return
-    setPicked(new Set())
-    setArmed(false)
-  }, [editing])
+    orderRef.current = stickers.map((s) => s.id)
+  }, [stickers])
 
   const nPicked = picked.size
   const ghost = dragId ? stickers.find((s) => s.id === dragId) : undefined
@@ -95,6 +89,8 @@ export default function Library({
   function exitEdit() {
     editingRef.current = false
     onEditingChange(false)
+    setPicked(new Set())
+    setArmed(false)
   }
 
   function togglePick(id: string) {
@@ -124,7 +120,7 @@ export default function Library({
   }
 
   function moveToSlot(id: string, clientX: number, clientY: number) {
-    const ids = stickersRef.current.map((s) => s.id)
+    const ids = orderRef.current
     const from = ids.indexOf(id)
     const to = slotIndex(clientX, clientY)
     if (from < 0 || from === to) return
@@ -256,7 +252,7 @@ export default function Library({
     const ids = [...picked]
     setArmed(false)
     setPicked(new Set())
-    const remaining = stickersRef.current.length - ids.length
+    const remaining = stickers.length - ids.length
     if (remaining <= 0) exitEdit()
     onDelete(ids)
   }

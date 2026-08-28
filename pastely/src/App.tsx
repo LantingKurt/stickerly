@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import Camera from './screens/Camera'
 import Preview from './screens/Preview'
@@ -30,7 +30,7 @@ export default function App() {
   const [selected, setSelected] = useState<Sticker | null>(null)
   const [newId, setNewId] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
-  const [urls, setUrls] = useState(() => new Map<string, string>())
+  const urlMap = useRef(new Map<string, string>())
 
   const refresh = useCallback(async () => setStickers(await listStickers()), [])
   useEffect(() => { refresh() }, [refresh])
@@ -41,28 +41,20 @@ export default function App() {
     return () => clearTimeout(t)
   }, [newId])
 
-  useEffect(() => {
-    setUrls((prev) => {
-      const live = new Set(stickers.map((s) => s.id))
-      const next = new Map<string, string>()
-      let changed = prev.size !== live.size
-      for (const s of stickers) {
-        const existing = prev.get(s.id)
-        if (existing) next.set(s.id, existing)
-        else {
-          next.set(s.id, URL.createObjectURL(s.blob))
-          changed = true
-        }
-      }
-      for (const [id, url] of prev) {
-        if (!live.has(id)) {
-          URL.revokeObjectURL(url)
-          changed = true
-        }
-      }
-      return changed ? next : prev
-    })
-  }, [stickers])
+  const stickerKey = stickers.map((s) => s.id).sort().join()
+  const urls = useMemo(() => {
+    const prev = urlMap.current
+    const live = new Set(stickers.map((s) => s.id))
+    const next = new Map<string, string>()
+    for (const s of stickers) {
+      next.set(s.id, prev.get(s.id) ?? URL.createObjectURL(s.blob))
+    }
+    for (const [id, url] of prev) {
+      if (!live.has(id)) URL.revokeObjectURL(url)
+    }
+    urlMap.current = next
+    return next
+  }, [stickerKey])
 
   const latestUrl = useMemo(() => {
     const latest = [...stickers].sort((a, b) => b.createdAt - a.createdAt)[0]
