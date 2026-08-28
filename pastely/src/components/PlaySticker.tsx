@@ -1,5 +1,13 @@
 import { useEffect, useRef, useState, type PointerEvent as PE } from 'react'
-import { animate, motion, useMotionValue, useReducedMotion, useTransform } from 'motion/react'
+import {
+  animate,
+  motion,
+  useMotionTemplate,
+  useMotionValue,
+  useReducedMotion,
+  useSpring,
+  useTransform,
+} from 'motion/react'
 import { traceSilhouette, type Silhouette } from '../lib/stickerSvg'
 
 interface Props {
@@ -27,6 +35,12 @@ function rubbered(value: number, min: number, max: number, dim: number) {
   if (value > max) return max + rubberband(value - max, dim)
   return value
 }
+
+function clamp(n: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, n))
+}
+
+const TILT_SPRING = { stiffness: 150, damping: 17, mass: 0.7 }
 
 export default function PlaySticker({
   id,
@@ -68,11 +82,20 @@ export default function PlaySticker({
   const rotate = useMotionValue(0)
   const press = useMotionValue(1)
   const opacity = useMotionValue(0)
+  const px = useMotionValue(0)
+  const py = useMotionValue(0)
+  const sx = useSpring(px, TILT_SPRING)
+  const sy = useSpring(py, TILT_SPRING)
+  const tiltX = useTransform(sy, [-1, 1], [14, -14])
+  const tiltY = useTransform(sx, [-1, 1], [-22, 22])
+  const glareX = useTransform(sx, [-1, 1], [18, 82])
+  const glareY = useTransform(sy, [-1, 1], [12, 88])
+  const glare = useMotionTemplate`radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0) 55%)`
 
   const transform = useTransform(
-    [x, y, scale, rotate, press],
-    ([tx, ty, sc, rot, pr]) =>
-      `translate(${tx}px, ${ty}px) rotate(${rot}deg) scale(${(sc as number) * (pr as number)})`,
+    [x, y, scale, rotate, press, tiltX, tiltY],
+    ([tx, ty, sc, rot, pr, rx, ry]) =>
+      `translate3d(${tx}px, ${ty}px, 0) rotateX(${rx}deg) rotateY(${ry}deg) rotate(${rot}deg) scale(${(sc as number) * (pr as number)})`,
   )
 
   const size = fit(svg, deskW, deskH)
@@ -133,6 +156,20 @@ export default function PlaySticker({
     }
   }
 
+  function trackTilt(e: PE) {
+    const el = root.current
+    if (!el || reduce) return
+    const r = el.getBoundingClientRect()
+    if (r.width < 1 || r.height < 1) return
+    px.set(clamp(((e.clientX - r.left) / r.width) * 2 - 1, -1, 1))
+    py.set(clamp(((e.clientY - r.top) / r.height) * 2 - 1, -1, 1))
+  }
+
+  function resetTilt() {
+    px.set(0)
+    py.set(0)
+  }
+
   function beginDrag(pt: { x: number; y: number }) {
     const g = gesture.current
     if (!g) return
@@ -164,6 +201,7 @@ export default function PlaySticker({
     root.current?.setPointerCapture(e.pointerId)
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
     onSelect()
+    trackTilt(e)
 
     if (pointers.current.size === 1) {
       x.stop?.()
@@ -215,6 +253,7 @@ export default function PlaySticker({
     const dt = Math.max(now - g.lastT, 1)
 
     if (pointers.current.size >= 2) {
+      resetTilt()
       const pts = [...pointers.current.values()]
       const dx = pts[1].x - pts[0].x
       const dy = pts[1].y - pts[0].y
@@ -231,6 +270,7 @@ export default function PlaySticker({
     const b = bounds()
     x.jump(rubbered(nx, b.minX, b.maxX, deskW))
     y.jump(rubbered(ny, b.minY, b.maxY, deskH))
+    trackTilt(e)
     g.vx = (e.clientX - g.lastX) / dt
     g.vy = (e.clientY - g.lastY) / dt
     g.lastX = e.clientX
@@ -248,6 +288,7 @@ export default function PlaySticker({
     animate(x, Math.min(b.maxX, Math.max(b.minX, x.get())), spring)
     animate(y, Math.min(b.maxY, Math.max(b.minY, y.get())), spring)
     animate(press, 1, { duration: 0.12, ease: [0.23, 1, 0.32, 1] })
+    if (g && !window.matchMedia('(hover: hover) and (pointer: fine)').matches) resetTilt()
   }
 
   function onPointerUp(e: PE) {
@@ -276,7 +317,16 @@ export default function PlaySticker({
       className="play-sticker diecut diecut-lg"
       style={{ zIndex, width: dw, height: dh, transform, opacity, touchAction: 'none' }}
       onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
+      onPointerMove={(e) => {
+        if (pointers.current.has(e.pointerId)) onPointerMove(e)
+        else if (e.pointerType === 'mouse') trackTilt(e)
+      }}
+      onPointerEnter={(e) => {
+        if (e.pointerType === 'mouse' && pointers.current.size === 0) trackTilt(e)
+      }}
+      onPointerLeave={(e) => {
+        if (e.pointerType === 'mouse' && pointers.current.size === 0) resetTilt()
+      }}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
     >
@@ -302,6 +352,19 @@ export default function PlaySticker({
             preserveAspectRatio="xMidYMid meet"
           />
         </svg>
+      )}
+      {!reduce && (
+        <div
+          className="sticker-light"
+          style={{
+            WebkitMaskImage: `url(${src})`,
+            maskImage: `url(${src})`,
+          }}
+          aria-hidden
+        >
+          <span className="sticker-sheen" />
+          <motion.span className="sticker-glare" style={{ background: glare }} />
+        </div>
       )}
     </motion.div>
   )
