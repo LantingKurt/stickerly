@@ -69,8 +69,11 @@ export default function Library({
   const ghostScale = useMotionValue(1)
 
   stickersRef.current = stickers
-  editingRef.current = editing
   orderRef.current = stickers.map((s) => s.id)
+
+  useEffect(() => {
+    editingRef.current = editing
+  }, [editing])
 
   useEffect(() => {
     if (editing) return

@@ -660,6 +660,7 @@ button:focus-visible {
   .corners { animation: none; }
   .scan::before { display: none; }
   .confetti { display: none; }
-  .cell-inner { transform: none !important; }
-  .play-sticker { transition: none; }
-}
+  .btn-danger-ghost {
+    background: var(--paper-2);
+    color: var(--danger);
+  }
