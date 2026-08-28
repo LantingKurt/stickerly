@@ -6,3 +6,8 @@
 {"sessionId":"221c2c","location":"pastely/src/main.tsx","message":"app entry evaluated","data":{"ok":true},"timestamp":1787927691355,"hypothesisId":"E"}
 {"sessionId":"221c2c","location":"pastely/src/lib/supabase.ts","message":"supabase module evaluating","data":{"hasUrl":true,"hasKey":true},"timestamp":1787927715959,"hypothesisId":"D"}
 {"sessionId":"221c2c","location":"pastely/src/main.tsx","message":"app entry evaluated","data":{"ok":true},"timestamp":1787927715967,"hypothesisId":"E"}
+{"sessionId":"221c2c","location":"pastely/src/lib/supabase.ts","message":"supabase module evaluating","data":{"hasUrl":false,"hasKey":false},"timestamp":1787927820633,"hypothesisId":"D"}
+{"sessionId":"221c2c","location":"pastely/src/lib/supabase.ts","message":"supabase module evaluating","data":{"hasUrl":false,"hasKey":false},"timestamp":1787927822920,"hypothesisId":"D"}
+{"sessionId":"221c2c","location":"pastely/src/lib/supabase.ts","message":"supabase module evaluating","data":{"hasUrl":false,"hasKey":false},"timestamp":1787927827078,"hypothesisId":"D"}
+{"sessionId":"221c2c","location":"pastely/src/lib/supabase.ts","message":"supabase module evaluating","data":{"hasUrl":false,"hasKey":false},"timestamp":1787927827794,"hypothesisId":"D"}
+{"sessionId":"221c2c","location":"pastely/src/lib/supabase.ts","message":"supabase module evaluating","data":{"hasUrl":false,"hasKey":false},"timestamp":1787927828349,"hypothesisId":"D"}

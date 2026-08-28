@@ -1,2 +1,3 @@
 {"sessionId":"221c2c","timestamp":1787927777728,"location":"pastely/vite.config.ts:resolveId","message":"resolving @supabase/supabase-js","hypothesisId":"A","data":{"id":"@supabase/supabase-js","pkgExists":true}}
 {"sessionId":"221c2c","timestamp":1787927777770,"location":"pastely/vite.config.ts:resolveId","message":"resolving @supabase/supabase-js","hypothesisId":"A","data":{"id":"@supabase/supabase-js","pkgExists":true}}
+{"sessionId":"221c2c","timestamp":1787927803508,"location":"pastely/vite.config.ts:resolveId","message":"resolving @supabase/supabase-js","hypothesisId":"A","data":{"id":"@supabase/supabase-js","pkgExists":true}}

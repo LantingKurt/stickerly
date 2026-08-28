@@ -31,3 +31,4 @@
 >>>>>>> 85c04442816925c8c008060d90dedac6ede852a5
 {"sessionId":"b055a5","timestamp":1787927777728,"location":"pastely/vite.config.ts:resolveId","message":"resolving @supabase/supabase-js","hypothesisId":"A","data":{"id":"@supabase/supabase-js","pkgExists":true}}
 {"sessionId":"b055a5","timestamp":1787927777770,"location":"pastely/vite.config.ts:resolveId","message":"resolving @supabase/supabase-js","hypothesisId":"A","data":{"id":"@supabase/supabase-js","pkgExists":true}}
+{"sessionId":"b055a5","timestamp":1787927803508,"location":"pastely/vite.config.ts:resolveId","message":"resolving @supabase/supabase-js","hypothesisId":"A","data":{"id":"@supabase/supabase-js","pkgExists":true}}
