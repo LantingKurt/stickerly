@@ -5,6 +5,7 @@ import type { Sticker } from '../lib/store'
 import Icon from '../components/Icon'
 import StickerImg from '../components/StickerImg'
 import Confetti from '../components/Confetti'
+import GoldenTicket from '../components/GoldenTicket'
 import { buzz } from '../lib/haptics'
 
 interface Props {

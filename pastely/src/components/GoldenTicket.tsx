@@ -1,0 +1,89 @@
+import { useRef, type PointerEvent as PE } from 'react'
+import {
+  motion,
+  useMotionTemplate,
+  useMotionValue,
+  useReducedMotion,
+  useSpring,
+  useTransform,
+} from 'motion/react'
+
+interface Props {
+  onRedeem?: () => void
+}
+
+// Pointer field tilts the ticket like the talk's golden ticket:
+// damped spring follow, slight parallax, idle sway, foil glare.
+export default function GoldenTicket({ onRedeem }: Props) {
+  const reduce = useReducedMotion()
+  const field = useRef<HTMLDivElement>(null)
+
+  const px = useMotionValue(0) // -1..1 across the field
+  const py = useMotionValue(0)
+  const spring = { stiffness: 150, damping: 17, mass: 0.7 }
+  const sx = useSpring(px, spring)
+  const sy = useSpring(py, spring)
+
+  const rotateX = useTransform(sy, [-1, 1], [14, -14])
+  const rotateY = useTransform(sx, [-1, 1], [-22, 22])
+  const moveX = useTransform(sx, [-1, 1], [-10, 10])
+  const moveY = useTransform(sy, [-1, 1], [-6, 6])
+  const glareX = useTransform(sx, [-1, 1], [18, 82])
+  const glareY = useTransform(sy, [-1, 1], [12, 88])
+  const glare = useMotionTemplate`radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0) 55%)`
+
+  function track(e: PE) {
+    const el = field.current
+    if (!el || reduce) return
+    const r = el.getBoundingClientRect()
+    px.set(Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1)))
+    py.set(Math.max(-1, Math.min(1, ((e.clientY - r.top) / r.height) * 2 - 1)))
+  }
+
+  function release(e: PE) {
+    if (e.pointerType !== 'mouse') reset()
+  }
+
+  function reset() {
+    px.set(0)
+    py.set(0)
+  }
+
+  return (
+    <div
+      ref={field}
+      className="ticket-field"
+      onPointerDown={track}
+      onPointerMove={track}
+      onPointerUp={release}
+      onPointerLeave={reset}
+      onPointerCancel={reset}
+    >
+      <motion.button
+        type="button"
+        className="golden-ticket"
+        onClick={onRedeem}
+        aria-label="Golden ticket — take a picture of a sticker"
+        style={reduce ? undefined : { rotateX, rotateY, x: moveX, y: moveY }}
+        whileTap={reduce ? undefined : { scale: 0.96 }}
+      >
+        <span className="gt-sway">
+          <span className="gt-body">
+            <span className="gt-stub">
+              <span className="gt-stub-text">Admit one</span>
+            </span>
+            <span className="gt-main">
+              <span className="gt-kicker">Pastely</span>
+              <span className="gt-title">
+                Golden Ticket <span className="gt-star">✦</span>
+              </span>
+              <span className="gt-sub">Good for one perfectly cut sticker</span>
+            </span>
+            {!reduce && <span className="gt-sheen" aria-hidden />}
+            {!reduce && <motion.span className="gt-glare" style={{ background: glare }} aria-hidden />}
+          </span>
+        </span>
+      </motion.button>
+    </div>
+  )
+}
