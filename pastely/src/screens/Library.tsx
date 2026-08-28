@@ -53,7 +53,7 @@ function LibraryCell({
   onUp: (e: PE<HTMLButtonElement>) => void
 }) {
   const cell = useRef<HTMLButtonElement>(null)
-  const { rotateX, rotateY, moveX, moveY, glare, track, release, reset, reduce: reduceTilt } = useTicketTilt(cell)
+  const { rotateX, rotateY, moveX, moveY, stickerGlare, track, release, reset, reduce: reduceTilt } = useTicketTilt(cell)
   const live = !editing && !isSlot && !reduceTilt
 
   return (
@@ -126,7 +126,7 @@ function LibraryCell({
             aria-hidden
           >
             <span className="gt-sheen" />
-            <motion.span className="gt-glare" style={{ background: glare }} />
+            <motion.span className="gt-glare" style={{ background: stickerGlare }} />
           </div>
         )}
       </motion.div>

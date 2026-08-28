@@ -62,7 +62,7 @@ export default function PlaySticker({
     vy: number
   } | null>(null)
   const lastPop = useRef(0)
-  const { rotateX: tiltX, rotateY: tiltY, moveX, moveY, glare, track, release, reset, reduce: reduceTilt } =
+  const { rotateX: tiltX, rotateY: tiltY, moveX, moveY, stickerGlare, track, release, reset, reduce: reduceTilt } =
     useTicketTilt(root)
 
   const x = useMotionValue(0)
@@ -87,7 +87,7 @@ export default function PlaySticker({
         if (live) setSvg(s)
       })
       .catch(() => {
-        if (live) setSvg({ width: 512, height: 512, contentW: 512, contentH: 512, d: 'M0 0H512V512H0Z' })
+        if (live) setSvg({ width: 512, height: 512, contentX: 0, contentY: 0, contentW: 512, contentH: 512, d: 'M0 0H512V512H0Z' })
       })
     return () => {
       live = false
@@ -277,7 +277,7 @@ export default function PlaySticker({
   return (
     <motion.div
       ref={root}
-      className="play-sticker diecut diecut-lg"
+      className="play-sticker"
       style={{ zIndex, width: dw, height: dh, transform, opacity, touchAction: 'none' }}
       onPointerDown={onPointerDown}
       onPointerMove={(e) => {
@@ -295,27 +295,29 @@ export default function PlaySticker({
       }}
     >
       {svg && (
-        <svg
-          viewBox={`0 0 ${svg.width} ${svg.height}`}
-          width="100%"
-          height="100%"
-          overflow="visible"
-          aria-label="Sticker"
-        >
-          <defs>
-            <clipPath id={clipId}>
-              <path d={svg.d} />
-            </clipPath>
-          </defs>
-          <image
-            href={src}
-            width={svg.width}
-            height={svg.height}
-            clipPath={`url(#${clipId})`}
-            style={{ pointerEvents: 'visiblePainted' }}
-            preserveAspectRatio="xMidYMid meet"
-          />
-        </svg>
+        <div className="play-sticker-art diecut diecut-lg">
+          <svg
+            viewBox={`${svg.contentX ?? 0} ${svg.contentY ?? 0} ${svg.contentW || svg.width} ${svg.contentH || svg.height}`}
+            width="100%"
+            height="100%"
+            overflow="visible"
+            aria-label="Sticker"
+          >
+            <defs>
+              <clipPath id={clipId}>
+                <path d={svg.d} />
+              </clipPath>
+            </defs>
+            <image
+              href={src}
+              width={svg.width}
+              height={svg.height}
+              clipPath={`url(#${clipId})`}
+              style={{ pointerEvents: 'visiblePainted' }}
+              preserveAspectRatio="xMidYMid meet"
+            />
+          </svg>
+        </div>
       )}
       {!reduceTilt && (
         <div
@@ -323,11 +325,15 @@ export default function PlaySticker({
           style={{
             WebkitMaskImage: `url(${src})`,
             maskImage: `url(${src})`,
+            WebkitMaskSize: `${(svg.width / (svg.contentW || svg.width)) * 100}% ${(svg.height / (svg.contentH || svg.height)) * 100}%`,
+            maskSize: `${(svg.width / (svg.contentW || svg.width)) * 100}% ${(svg.height / (svg.contentH || svg.height)) * 100}%`,
+            WebkitMaskPosition: `${(-((svg.contentX ?? 0) / (svg.contentW || 1))) * 100}% ${(-((svg.contentY ?? 0) / (svg.contentH || 1))) * 100}%`,
+            maskPosition: `${(-((svg.contentX ?? 0) / (svg.contentW || 1))) * 100}% ${(-((svg.contentY ?? 0) / (svg.contentH || 1))) * 100}%`,
           }}
           aria-hidden
         >
           <span className="gt-sheen" />
-          <motion.span className="gt-glare" style={{ background: glare }} />
+          <motion.span className="gt-glare" style={{ background: stickerGlare }} />
         </div>
       )}
     </motion.div>
@@ -336,9 +342,9 @@ export default function PlaySticker({
 
 function fit(svg: Silhouette | null, deskW: number, deskH: number) {
   if (!svg || !deskW || !deskH) return { dw: 0, dh: 0 }
-  const max = Math.min(deskW, deskH) * 0.78
+  const max = Math.min(deskW, deskH) * 0.9
   const cw = svg.contentW || svg.width
   const ch = svg.contentH || svg.height
   const s = Math.min(max / cw, max / ch)
-  return { dw: svg.width * s, dh: svg.height * s }
+  return { dw: cw * s, dh: ch * s }
 }
