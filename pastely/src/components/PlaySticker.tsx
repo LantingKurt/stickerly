@@ -1,5 +1,13 @@
 import { useEffect, useRef, useState, type PointerEvent as PE } from 'react'
-import { animate, motion, useMotionValue, useReducedMotion, useTransform } from 'motion/react'
+import {
+  animate,
+  motion,
+  useMotionTemplate,
+  useMotionValue,
+  useReducedMotion,
+  useSpring,
+  useTransform,
+} from 'motion/react'
 import { traceSilhouette, type Silhouette } from '../lib/stickerSvg'
 
 interface Props {
