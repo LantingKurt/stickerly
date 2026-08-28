@@ -552,5 +552,81 @@ _**Agent (grok-4.6)**_
 <think><details><summary>Thought Process</summary>
 The user confirmed option A: IndexedDB persistence.
 
-Locked in six features. Remaining open items include stack choice, iPhone LAN loading, PWA manifest/service worker, library navigation, first-run hint, and empty state. The next priority is deciding between Vite vanilla
+Locked in six features. Remaining open items include stack choice, iPhone LAN loading, PWA manifest/service worker, library navigation, first-run hint, and empty state. The next priority is deciding between Vite vanilla and React, since stack choice determines implementation.
+
+Vite plus vanilla HTML/CSS/JS is the fastest path for a single-page app. React adds unnecessary ceremony. Service workers are deferred. The next question is stack choice.
+
+React is rejected. The plan is to ask the phone URL next, then library UI scope, then confirm shared understanding.
 </details></think>
+
+_**Agent (grok-4.6)**_
+
+Locked: Keep writes a PNG into IndexedDB. Close the app, it is still there.
+
+**Question 7 — What is the app made of?**
+
+**A.** Vite, one HTML page, a little CSS and JS. No React, no router, no backend.
+
+**B.** Vite + React. Same app, more files, more time.
+
+**C.** Next.js or anything with a server. Contradicts “fully local.”
+
+**My recommendation: A.** The work is camera input, imgly, Keep, a grid. A framework does not make cutout work and it will eat the 30 minutes. Manifest + `apple-mobile-web-app-capable` so Add to Home Screen looks like an app. No service worker in this slice.
+
+A, B, or C?
+
+---
+
+_**User**_
+
+Will it needs to have a back end? It's because we're doing a web app. We're hosting this on Vercel itself? So the storage, it's up to you if it's possible to store it locally, but it's much possible we need it quick and fast. So, in the moment, the user takes a picture, crops out the photo, it gets stored automatically on that grid? We need to be it fast?
+
+---
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+The user is asking several things at once. They seem to be reconsidering earlier decisions.
+
+No backend is required. A Vite SPA can run entirely on Vercel static hosting. Local IndexedDB storage will work fine on the live origin.
+
+A backend would be slower and violate the PRD. The user wants photos stored automatically on the grid after cropping, which conflicts with the earlier Keep/Retake flow. This needs a clear decision. Vercel hosting is preferable to localhost because it provides HTTPS for free, which enables PWA features and getUserMedia.
+
+Add to Home Screen from a real URL is much better than typing a LAN IP. The ImgLy model download makes the first crop slow. Downscaling helps subsequent loads.
+
+Auto-save does not make cutouts faster. The real bottleneck is the ImgLy model download. Keep/Retake versus auto-save is purely a UX choice, not a speed trade-off. The main open decision is whether to deploy on Vercel or keep everything local.
+
+I will lock the hosting decision and ask only the remaining UX fork. The recommendation is Vercel static hosting with no backend or database. Auto-save contradicts the earlier Keep/Retake choice.
+
+I will lock the hosting decision and ask only whether to use Vercel static hosting or stay local. The auto-save question is left aside to respect the one-question rule.
+
+I will ask whether to use Vercel static hosting or stay local. The auto-save versus Keep/Retake question is resolved by keeping the existing Keep/Retake flow, since auto-save does not make cutouts faster.
+
+I will recommend Vercel static hosting as the locked default. The remaining open decision is whether to keep the Keep/Retake flow or switch to auto-save. The user previously chose Keep but now describes auto-save, so I need them to pick one.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+No backend. A web app on Vercel can be **static files** — HTML, JS, CSS, the imgly model fetch. Vercel is the host, not a database. There is no API, no Vercel KV, no Postgres.
+
+Storage stays **on the phone** in IndexedDB, on the Vercel origin. That is faster than uploading a photo. A backend would make the loop slower and send the picture off the device.
+
+The wait is the cutout model, not save. Keep vs auto-save does not change that wait.
+
+**Question 8 — After cutout, does it land on the grid by itself?**
+
+You already picked Keep / Retake. Now you are describing auto-save.
+
+**A.** Still the preview: cutout finishes, they tap **Keep**, then it is in the grid. Retake if the mask is wrong.
+
+**B.** No Keep. Cutout finishes, it is already in the grid. Faster by one tap. Bad cuts get saved.
+
+**My recommendation: A.** Save is already instant. Dropping Keep does not make it “quick.” It only removes the recovery tap. Host on Vercel as a static Vite app; storage stays local.
+
+A or B?
+
+---
+
+_**User**_
+
+A

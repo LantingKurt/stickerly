@@ -1,4 +1,4 @@
-# Local hackathon loop: commit dirty files, pull (merge), push.
+# Local hackathon loop: git add -A, commit if dirty, pull (merge), push.
 # Does not force-push. Aborts a conflicted merge and waits for the next tick.
 #
 #   .\scripts\hackathon-sync.ps1
@@ -27,15 +27,15 @@ function Get-RepoRoot {
 }
 
 function Invoke-Git {
-    param([Parameter(Mandatory = $true)][string[]]$Args)
-    & git @Args
+    param([Parameter(Mandatory = $true)][string[]]$GitArgs)
+    & git @GitArgs
     return $LASTEXITCODE
 }
 
 function Sync-Once {
     $branch = (git branch --show-current).Trim()
     if (-not $branch) {
-        Write-Host "Detached HEAD — skip this tick"
+        Write-Host "Detached HEAD, skip this tick"
         return
     }
 
@@ -46,7 +46,7 @@ function Sync-Once {
             $stamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
             $null = Invoke-Git @("commit", "-m", "hackathon-sync: autosave $stamp")
             if ($LASTEXITCODE -ne 0) {
-                Write-Host "Commit failed — skip this tick"
+                Write-Host "Commit failed, skip this tick"
                 return
             }
         }
@@ -54,7 +54,7 @@ function Sync-Once {
 
     $null = Invoke-Git @("fetch", "origin")
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "Fetch failed — skip this tick"
+        Write-Host "Fetch failed, skip this tick"
         return
     }
 
@@ -71,11 +71,13 @@ function Sync-Once {
         return
     }
 
-    Write-Host ("Synced {0} at {1}" -f $branch, (Get-Date -Format "HH:mm:ss"))
+    $time = Get-Date -Format "HH:mm:ss"
+    Write-Host "Synced $branch at $time"
 }
 
 Set-Location (Get-RepoRoot)
-Write-Host ("Hackathon sync every {0} min on {1} (Ctrl+C to stop)" -f $Minutes, (git branch --show-current).Trim())
+$current = (git branch --show-current).Trim()
+Write-Host "Hackathon sync every $Minutes min on $current (Ctrl+C to stop)"
 
 do {
     Sync-Once
