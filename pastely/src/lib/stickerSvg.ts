@@ -4,6 +4,8 @@ const ALPHA = 32
 export interface Silhouette {
   width: number
   height: number
+  contentX: number
+  contentY: number
   contentW: number
   contentH: number
   d: string
@@ -28,7 +30,7 @@ async function trace(src: string): Promise<Silhouette> {
 
   const width = img.naturalWidth || img.width
   const height = img.naturalHeight || img.height
-  if (!width || !height) return { width: 1, height: 1, contentW: 1, contentH: 1, d: 'M0 0H1V1H0Z' }
+  if (!width || !height) return { width: 1, height: 1, contentX: 0, contentY: 0, contentW: 1, contentH: 1, d: 'M0 0H1V1H0Z' }
 
   const sample = Math.min(1, MAX_EDGE / Math.max(width, height))
   const cw = Math.max(1, Math.round(width * sample))
@@ -62,23 +64,30 @@ async function trace(src: string): Promise<Silhouette> {
     }
   }
 
-  const contentW = maxX < minX ? width : Math.max(1, (maxX - minX + 1) * (width / cw))
-  const contentH = maxY < minY ? height : Math.max(1, (maxY - minY + 1) * (height / ch))
+  const sx = width / cw
+  const sy = height / ch
+  let contentX = minX * sx
+  let contentY = minY * sy
+  let contentW = maxX < minX ? width : Math.max(1, (maxX - minX + 1) * sx)
+  let contentH = maxY < minY ? height : Math.max(1, (maxY - minY + 1) * sy)
+  const pad = Math.max(contentW, contentH) * 0.06
+  contentX = Math.max(0, contentX - pad)
+  contentY = Math.max(0, contentY - pad)
+  contentW = Math.min(width - contentX, contentW + pad * 2)
+  contentH = Math.min(height - contentY, contentH + pad * 2)
 
   if (opaque < mask.length * 0.01) return rectPath(width, height)
 
   const contour = outline(mask, cw, ch)
   if (!contour || contour.length < 8) return rectPath(width, height)
 
-  const sx = width / cw
-  const sy = height / ch
   const simplified = simplify(contour, 1.4)
   const d = toPath(simplified, sx, sy)
-  return { width, height, contentW, contentH, d }
+  return { width, height, contentX, contentY, contentW, contentH, d }
 }
 
 function rectPath(width: number, height: number): Silhouette {
-  return { width, height, contentW: width, contentH: height, d: `M0 0H${width}V${height}H0Z` }
+  return { width, height, contentX: 0, contentY: 0, contentW: width, contentH: height, d: `M0 0H${width}V${height}H0Z` }
 }
 
 function outline(mask: Uint8Array, w: number, h: number): [number, number][] | null {

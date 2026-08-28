@@ -28,6 +28,7 @@ export function useTicketTilt(field: RefObject<HTMLElement | null>) {
   const glareX = useTransform(sx, [-1, 1], [18, 82])
   const glareY = useTransform(sy, [-1, 1], [12, 88])
   const glare = useMotionTemplate`radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0) 55%)`
+  const stickerGlare = useMotionTemplate`radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 32%)`
 
   function track(e: PE) {
     const el = field.current
@@ -46,7 +47,7 @@ export function useTicketTilt(field: RefObject<HTMLElement | null>) {
     py.set(0)
   }
 
-  return { rotateX, rotateY, moveX, moveY, glare, track, release, reset, reduce }
+  return { rotateX, rotateY, moveX, moveY, glare, stickerGlare, track, release, reset, reduce }
 }
 
 export default function GoldenTicket({ onRedeem }: Props) {
