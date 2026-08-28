@@ -2,12 +2,12 @@
 # After that, GitHub runs it. Nobody on the team starts a local script.
 #
 # What it does on GitHub:
+#   - git add -A, commit if the tree is dirty, push
 #   - merges every non-draft PR that is mergeable
 #   - merges main into remaining PR branches
 #
-# It only sees commits already pushed to GitHub. It cannot commit files
-# sitting on someone's laptop. Teammates still `git pull` to update their
-# working copy. github.com updates on its own.
+# It only sees the checkout on the GitHub runner. Unsaved laptop files
+# are committed by scripts/hackathon-sync.ps1, not by this workflow.
 #
 # Interval is every 1 minute. GitHub may still delay or floor scheduled
 # runs (often ~5 min on github.com). Push to main also triggers a run.
@@ -110,3 +110,18 @@ jobs:
               done
 
           git checkout "${DEFAULT_BRANCH}"
+
+      - name: Add, commit, and push
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git checkout "${DEFAULT_BRANCH}"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing to commit"
+            exit 0
+          fi
+          git commit -m "hackathon-sync: autosave $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          git pull origin "${DEFAULT_BRANCH}" --no-rebase --no-edit
+          git push origin "${DEFAULT_BRANCH}"
