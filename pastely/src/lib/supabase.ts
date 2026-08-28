@@ -5,6 +5,7 @@ const key = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 // #region agent log
 fetch('http://127.0.0.1:7834/ingest/3d251863-5447-43b8-a393-d879be895c64',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'221c2c'},body:JSON.stringify({sessionId:'221c2c',location:'pastely/src/lib/supabase.ts',message:'supabase module evaluating',data:{hasUrl:Boolean(url),hasKey:Boolean(key)},timestamp:Date.now(),hypothesisId:'D'})}).catch(()=>{});
+fetch('http://127.0.0.1:7834/ingest/3d251863-5447-43b8-a393-d879be895c64',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b055a5'},body:JSON.stringify({sessionId:'b055a5',location:'pastely/src/lib/supabase.ts',message:'supabase module evaluating',data:{hasUrl:Boolean(url),hasKey:Boolean(key)},timestamp:Date.now(),hypothesisId:'D',runId:'post-fix'})}).catch(()=>{});
 // #endregion
 
 if (!url || !key) {

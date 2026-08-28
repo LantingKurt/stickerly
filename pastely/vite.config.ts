@@ -8,13 +8,19 @@ import { fileURLToPath } from 'node:url'
 const here = path.dirname(fileURLToPath(import.meta.url))
 const workspaceRoot = path.resolve(here, '..')
 const logPath = path.join(workspaceRoot, 'debug-221c2c.log')
+const logPathB055a5 = path.join(workspaceRoot, 'debug-b055a5.log')
 
 function agentLog(payload: Record<string, unknown>) {
   // #region agent log
   try {
+    const ts = Date.now()
     fs.appendFileSync(
       logPath,
-      JSON.stringify({ sessionId: '221c2c', timestamp: Date.now(), ...payload }) + '\n',
+      JSON.stringify({ sessionId: '221c2c', timestamp: ts, ...payload }) + '\n',
+    )
+    fs.appendFileSync(
+      logPathB055a5,
+      JSON.stringify({ sessionId: 'b055a5', timestamp: ts, ...payload }) + '\n',
     )
   } catch {
     /* ignore */
