@@ -1,10 +1,3 @@
-const LOCAL = 38;
-const GLOBAL = 62;
-const SEED = 78;
-const ERODE = 2;
-const BLUR = 2;
-const PAD = 12;
-
 function dist2(r1, g1, b1, r2, g2, b2) {
   const dr = r1 - r2;
   const dg = g1 - g2;
@@ -43,13 +36,13 @@ function borderMedian(data, width, height) {
   return { r: medianChannel(rs), g: medianChannel(gs), b: medianChannel(bs) };
 }
 
-function floodBackground(data, width, height) {
+function floodBackground(data, width, height, local, global, seed) {
   const bg = borderMedian(data, width, height);
   const mask = new Uint8Array(width * height);
   const stack = [];
-  const localT2 = LOCAL * LOCAL;
-  const globalT2 = GLOBAL * GLOBAL;
-  const seedT2 = SEED * SEED;
+  const localT2 = local * local;
+  const globalT2 = global * global;
+  const seedT2 = seed * seed;
 
   const trySeed = (x, y) => {
     const i = y * width + x;
@@ -105,22 +98,28 @@ function keepLargest(bgMask, width, height) {
   const fg = new Uint8Array(width * height);
   const seen = new Uint8Array(width * height);
   let best = [];
-  for (let i = 0; i < bgMask.length; i++) {
-    if (bgMask[i] || seen[i]) continue;
-    const q = [i];
-    seen[i] = 1;
+  const dirs = [
+    [1, 0],
+    [-1, 0],
+    [0, 1],
+    [0, -1],
+  ];
+
+  for (let start = 0; start < bgMask.length; start++) {
+    if (bgMask[start] || seen[start]) continue;
+    const q = [start];
+    seen[start] = 1;
     const cells = [];
     while (q.length) {
       const cur = q.pop();
       cells.push(cur);
       const x = cur % width;
       const y = (cur / width) | 0;
-      const nbs = [cur + 1, cur - 1, cur + width, cur - width];
-      for (const n of nbs) {
-        const nx = n % width;
-        const ny = (n / width) | 0;
-        if (n < 0 || n >= bgMask.length) continue;
-        if (Math.abs(nx - x) + Math.abs(ny - y) !== 1) continue;
+      for (const [dx, dy] of dirs) {
+        const nx = x + dx;
+        const ny = y + dy;
+        if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+        const n = ny * width + nx;
         if (bgMask[n] || seen[n]) continue;
         seen[n] = 1;
         q.push(n);
@@ -140,12 +139,7 @@ function erode(fg, width, height, radius) {
       for (let x = 1; x < width - 1; x++) {
         const i = y * width + x;
         if (!cur[i]) continue;
-        if (
-          cur[i - 1] &&
-          cur[i + 1] &&
-          cur[i - width] &&
-          cur[i + width]
-        ) {
+        if (cur[i - 1] && cur[i + 1] && cur[i - width] && cur[i + width]) {
           next[i] = 1;
         }
       }
@@ -155,9 +149,9 @@ function erode(fg, width, height, radius) {
   return cur;
 }
 
-function blurAlpha(alpha, width, height, radius) {
-  const tmp = new Float32Array(alpha.length);
-  const out = new Uint8Array(alpha.length);
+function blurAlpha(src, width, height, radius) {
+  const tmp = new Float32Array(src.length);
+  const out = new Uint8Array(src.length);
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       let sum = 0;
@@ -165,7 +159,7 @@ function blurAlpha(alpha, width, height, radius) {
       for (let k = -radius; k <= radius; k++) {
         const xx = x + k;
         if (xx < 0 || xx >= width) continue;
-        sum += alpha[y * width + xx];
+        sum += src[y * width + xx];
         n++;
       }
       tmp[y * width + x] = sum / n;
@@ -191,8 +185,8 @@ function cropToAlpha(image, alpha, pad) {
   const { width, height, data } = image;
   let minX = width;
   let minY = height;
-  let maxX = 0;
-  let maxY = 0;
+  let maxX = -1;
+  let maxY = -1;
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       if (alpha[y * width + x] < 12) continue;
@@ -202,7 +196,7 @@ function cropToAlpha(image, alpha, pad) {
       if (y > maxY) maxY = y;
     }
   }
-  if (maxX < minX) return image;
+  if (maxX < 0) return image;
 
   minX = Math.max(0, minX - pad);
   minY = Math.max(0, minY - pad);
@@ -210,7 +204,7 @@ function cropToAlpha(image, alpha, pad) {
   maxY = Math.min(height - 1, maxY + pad);
   const w = maxX - minX + 1;
   const h = maxY - minY + 1;
-  const out = new ImageData(w, h);
+  const out = new ImageData(new Uint8ClampedArray(w * h * 4), w, h);
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const si = ((minY + y) * width + (minX + x)) * 4;
@@ -224,55 +218,103 @@ function cropToAlpha(image, alpha, pad) {
   return out;
 }
 
-async function canvasPng(imageData) {
+function canvasPng(imageData) {
   const canvas = document.createElement("canvas");
   canvas.width = imageData.width;
   canvas.height = imageData.height;
   canvas.getContext("2d").putImageData(imageData, 0, 0);
   return new Promise((resolve, reject) => {
     canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error("Cutout failed"))),
+      (blob) => (blob ? resolve(blob) : reject(new Error("Could not encode PNG"))),
       "image/png",
     );
   });
 }
 
 async function readScaled(file, maxEdge) {
-  const url = URL.createObjectURL(file);
+  let source = null;
   try {
-    const img = new Image();
-    await new Promise((resolve, reject) => {
-      img.onload = resolve;
-      img.onerror = () => reject(new Error("Could not read photo"));
-      img.src = url;
-    });
-    await img.decode?.().catch(() => {});
-    const srcW = img.naturalWidth;
-    const srcH = img.naturalHeight;
-    const scale = Math.min(1, maxEdge / Math.max(srcW, srcH));
-    const width = Math.max(1, Math.round(srcW * scale));
-    const height = Math.max(1, Math.round(srcH * scale));
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    ctx.drawImage(img, 0, 0, width, height);
-    return ctx.getImageData(0, 0, width, height);
-  } finally {
-    URL.revokeObjectURL(url);
+    source = await createImageBitmap(file, { imageOrientation: "from-image" });
+  } catch {
+    source = null;
   }
+  if (!source) {
+    const url = URL.createObjectURL(file);
+    try {
+      const img = new Image();
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = () => reject(new Error("Could not read photo"));
+        img.src = url;
+      });
+      await img.decode?.().catch(() => {});
+      source = img;
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  const srcW = source.width || source.naturalWidth;
+  const srcH = source.height || source.naturalHeight;
+  const scale = Math.min(1, maxEdge / Math.max(srcW, srcH));
+  const width = Math.max(1, Math.round(srcW * scale));
+  const height = Math.max(1, Math.round(srcH * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  ctx.drawImage(source, 0, 0, width, height);
+  if (source.close) source.close();
+  return ctx.getImageData(0, 0, width, height);
+}
+
+function extractMask(image, local, global, seed) {
+  const bgMask = floodBackground(
+    image.data,
+    image.width,
+    image.height,
+    local,
+    global,
+    seed,
+  );
+  return keepLargest(bgMask, image.width, image.height);
+}
+
+function countOpaque(fg) {
+  let n = 0;
+  for (let i = 0; i < fg.length; i++) n += fg[i];
+  return n;
 }
 
 export async function stickerCutout(file, maxEdge = 960) {
   const image = await readScaled(file, maxEdge);
-  const bgMask = floodBackground(image.data, image.width, image.height);
-  let fg = keepLargest(bgMask, image.width, image.height);
-  const opaque = fg.reduce((n, v) => n + v, 0);
-  if (opaque < image.width * image.height * 0.01) {
-    throw new Error("Could not find a sticker");
+  const area = image.width * image.height;
+  const attempts = [
+    [38, 62, 78],
+    [28, 44, 52],
+    [22, 34, 40],
+  ];
+
+  let fg = null;
+  let opaque = 0;
+  for (const [local, global, seed] of attempts) {
+    fg = extractMask(image, local, global, seed);
+    opaque = countOpaque(fg);
+    if (opaque >= area * 0.02 && opaque <= area * 0.92) break;
   }
-  fg = erode(fg, image.width, image.height, ERODE);
-  const alpha = blurAlpha(fg.map((v) => (v ? 255 : 0)), image.width, image.height, BLUR);
-  const cropped = cropToAlpha(image, alpha, PAD);
-  return canvasPng(cropped);
+
+  if (!fg || opaque < area * 0.015) {
+    return canvasPng(image);
+  }
+
+  const radius = opaque < area * 0.08 ? 1 : 2;
+  fg = erode(fg, image.width, image.height, radius);
+  if (countOpaque(fg) < area * 0.008) {
+    return canvasPng(image);
+  }
+
+  const alpha = new Uint8Array(fg.length);
+  for (let i = 0; i < fg.length; i++) alpha[i] = fg[i] ? 255 : 0;
+  const soft = blurAlpha(alpha, image.width, image.height, 2);
+  return canvasPng(cropToAlpha(image, soft, 12));
 }
