@@ -43,6 +43,12 @@ const paths = {
     </>
   ),
   check: <path d="m5 12.5 4.5 4.5L19 7" />,
+  close: (
+    <>
+      <path d="M6 6l12 12" />
+      <path d="M18 6 6 18" />
+    </>
+  ),
 } satisfies Record<string, ReactNode>
 
 export type IconName = keyof typeof paths

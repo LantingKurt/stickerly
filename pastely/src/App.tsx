@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import Camera from './screens/Camera'
 import Preview from './screens/Preview'
 import Library from './screens/Library'
-import Detail from './screens/Detail'
+import Playground from './screens/Playground'
 import Icon from './components/Icon'
 import { DieCutDefs } from './components/StickerImg'
 import { cutoutSticker } from './lib/cutout'
@@ -67,9 +67,10 @@ export default function App() {
 
   async function handleDelete(s: Sticker) {
     await deleteSticker(s.id)
-    setSelected(null)
     await refresh()
   }
+
+  const handleClosePlayground = useCallback(() => setSelected(null), [])
 
   return (
     <>
@@ -100,17 +101,18 @@ export default function App() {
 
       <AnimatePresence>
         {selected && (
-          <Detail
-            key={selected.id}
-            sticker={selected}
-            url={urls.get(selected.id)!}
-            onClose={() => setSelected(null)}
+          <Playground
+            key="playground"
+            opened={selected}
+            stickers={stickers}
+            urls={urls}
+            onClose={handleClosePlayground}
             onDelete={handleDelete}
           />
         )}
       </AnimatePresence>
 
-      {!shot && (
+      {!shot && !selected && (
         <nav className="tabbar">
           {(['library', 'camera'] as const).map((t) => (
             <button
