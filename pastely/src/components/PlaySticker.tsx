@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type PointerEvent as PE } from 'react'
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from 'motion/react'
 import { traceSilhouette, type Silhouette } from '../lib/stickerSvg'
-import { useHoverTilt } from '../lib/useHoverTilt'
+import { useTicketTilt } from './GoldenTicket'
 
 interface Props {
   id: string
@@ -62,7 +62,8 @@ export default function PlaySticker({
     vy: number
   } | null>(null)
   const lastPop = useRef(0)
-  const { rotateX: tiltX, rotateY: tiltY, glare, track, reset, reduce: reduceTilt } = useHoverTilt(root)
+  const { rotateX: tiltX, rotateY: tiltY, moveX, moveY, glare, track, release, reset, reduce: reduceTilt } =
+    useTicketTilt(root)
 
   const x = useMotionValue(0)
   const y = useMotionValue(0)
@@ -72,9 +73,9 @@ export default function PlaySticker({
   const opacity = useMotionValue(0)
 
   const transform = useTransform(
-    [x, y, scale, rotate, press, tiltX, tiltY],
-    ([tx, ty, sc, rot, pr, rx, ry]) =>
-      `translate3d(${tx}px, ${ty}px, 0) rotateX(${rx}deg) rotateY(${ry}deg) rotate(${rot}deg) scale(${(sc as number) * (pr as number)})`,
+    [x, y, scale, rotate, press, tiltX, tiltY, moveX, moveY],
+    ([tx, ty, sc, rot, pr, rx, ry, mx, my]) =>
+      `translate3d(${(tx as number) + (mx as number)}px, ${(ty as number) + (my as number)}px, 0) rotateX(${rx}deg) rotateY(${ry}deg) rotate(${rot}deg) scale(${(sc as number) * (pr as number)})`,
   )
 
   const size = fit(svg, deskW, deskH)
@@ -283,13 +284,11 @@ export default function PlaySticker({
         if (pointers.current.has(e.pointerId)) onPointerMove(e)
         else track(e)
       }}
-      onPointerOut={(e) => {
-        if (pointers.current.size > 0) return
-        const next = e.relatedTarget
-        if (next instanceof Node && root.current?.contains(next)) return
-        reset()
+      onPointerUp={(e) => {
+        onPointerUp(e)
+        if (pointers.current.size === 0) release(e)
       }}
-      onPointerUp={onPointerUp}
+      onPointerLeave={reset}
       onPointerCancel={onPointerUp}
     >
       {svg && (
@@ -324,8 +323,8 @@ export default function PlaySticker({
           }}
           aria-hidden
         >
-          <span className="sticker-sheen" />
-          <motion.span className="sticker-glare" style={{ background: glare }} />
+          <span className="gt-sheen" />
+          <motion.span className="gt-glare" style={{ background: glare }} />
         </div>
       )}
     </motion.div>
