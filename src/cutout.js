@@ -1,7 +1,6 @@
-import { edgeCutout } from "./fallback-cutout.js";
+import { stickerCutout } from "./fallback-cutout.js";
 
 const MAX_EDGE = 1024;
-const IOS_MAX_EDGE = 512;
 
 let removeBackground = null;
 
@@ -19,7 +18,7 @@ function forceSingleThread() {
       get: () => 1,
     });
   } catch {
-    // Safari can throw if the property is locked; imgly may still fail and we fall back.
+    // Safari can throw if the property is locked.
   }
 }
 
@@ -99,12 +98,16 @@ async function resizeToMax(file, max) {
 export async function cutOutSticker(file, onProgress) {
   forceSingleThread();
   polyfillConvertToBlob();
-  const max = isIos() ? IOS_MAX_EDGE : MAX_EDGE;
-  const small = await resizeToMax(file, max);
 
+  if (isIos()) {
+    onProgress?.("cutout", 1, 1);
+    return stickerCutout(file, 960);
+  }
+
+  const small = await resizeToMax(file, MAX_EDGE);
   try {
     const remove = await loadImgly();
-    const blob = await Promise.race([
+    return await Promise.race([
       remove(small, {
         device: "cpu",
         model: "small",
@@ -120,9 +123,8 @@ export async function cutOutSticker(file, onProgress) {
         setTimeout(() => reject(new Error("Cutout timed out")), 90_000);
       }),
     ]);
-    return blob;
   } catch (err) {
     console.warn("On-device model failed, using edge cutout", err);
-    return edgeCutout(small);
+    return stickerCutout(file, 960);
   }
 }
