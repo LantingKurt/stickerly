@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import Camera from './screens/Camera'
 import Preview from './screens/Preview'
@@ -23,6 +23,28 @@ interface Shot {
   failed: boolean
 }
 
+const stickerUrls = new Map<string, string>()
+
+function urlsFor(stickers: Sticker[]): Map<string, string> {
+  const live = new Set(stickers.map((s) => s.id))
+  for (const [id, url] of stickerUrls) {
+    if (!live.has(id)) {
+      URL.revokeObjectURL(url)
+      stickerUrls.delete(id)
+    }
+  }
+  const next = new Map<string, string>()
+  for (const s of stickers) {
+    let url = stickerUrls.get(s.id)
+    if (!url) {
+      url = URL.createObjectURL(s.blob)
+      stickerUrls.set(s.id, url)
+    }
+    next.set(s.id, url)
+  }
+  return next
+}
+
 export default function App() {
   const [tab, setTab] = useState<'camera' | 'library'>('camera')
   const [shot, setShot] = useState<Shot | null>(null)
@@ -30,7 +52,6 @@ export default function App() {
   const [selected, setSelected] = useState<Sticker | null>(null)
   const [newId, setNewId] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
-  const urlMap = useRef(new Map<string, string>())
 
   const refresh = useCallback(async () => setStickers(await listStickers()), [])
   useEffect(() => { refresh() }, [refresh])
@@ -41,20 +62,7 @@ export default function App() {
     return () => clearTimeout(t)
   }, [newId])
 
-  const stickerKey = stickers.map((s) => s.id).sort().join()
-  const urls = useMemo(() => {
-    const prev = urlMap.current
-    const live = new Set(stickers.map((s) => s.id))
-    const next = new Map<string, string>()
-    for (const s of stickers) {
-      next.set(s.id, prev.get(s.id) ?? URL.createObjectURL(s.blob))
-    }
-    for (const [id, url] of prev) {
-      if (!live.has(id)) URL.revokeObjectURL(url)
-    }
-    urlMap.current = next
-    return next
-  }, [stickerKey])
+  const urls = useMemo(() => urlsFor(stickers), [stickers])
 
   const latestUrl = useMemo(() => {
     const latest = [...stickers].sort((a, b) => b.createdAt - a.createdAt)[0]
