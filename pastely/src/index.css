@@ -666,6 +666,8 @@ button:focus-visible {
   margin: 4px 12px 8px;
   border-radius: 20px;
   overflow: hidden;
+  perspective: 900px;
+  perspective-origin: 50% 40%;
   background:
     radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.55), transparent 55%),
     var(--paper);
@@ -678,6 +680,7 @@ button:focus-visible {
   top: 0;
   pointer-events: none;
   transform-origin: center center;
+  transform-style: preserve-3d;
   will-change: transform;
 }
 .play-sticker svg {
@@ -688,6 +691,28 @@ button:focus-visible {
   pointer-events: none;
 }
 .play-sticker image { pointer-events: visiblePainted; }
+.sticker-light {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+.sticker-sheen {
+  position: absolute;
+  inset: -40%;
+  background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.4) 50%, transparent 58%);
+  animation: gt-sheen 3.8s var(--ease-in-out) infinite;
+}
+.sticker-glare {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: soft-light;
+}
 .play-chrome { flex: none; }
 .sheet-stage {
   flex: 1;
@@ -794,6 +819,6 @@ button:focus-visible {
   .confetti { display: none; }
   .cell-inner { transform: none !important; }
   .play-sticker { transition: none; }
-  .gt-sway, .gt-sheen { animation: none; }
-  .gt-sheen, .gt-glare { display: none; }
+  .gt-sway, .gt-sheen, .sticker-sheen { animation: none; }
+  .gt-sheen, .gt-glare, .sticker-sheen, .sticker-glare { display: none; }
 }
