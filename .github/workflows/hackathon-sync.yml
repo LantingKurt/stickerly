@@ -1,0 +1,127 @@
+# Hackathon git sync. Install is one push of this file to main.
+# After that, GitHub runs it. Nobody on the team starts a local script.
+#
+# What it does on GitHub:
+#   - git add -A, commit if the tree is dirty, push
+#   - merges every non-draft PR that is mergeable
+#   - merges main into remaining PR branches
+#
+# It only sees the checkout on the GitHub runner. Unsaved laptop files
+# are committed by scripts/hackathon-sync.ps1, not by this workflow.
+#
+# Interval is every 1 minute. GitHub may still delay or floor scheduled
+# runs (often ~5 min on github.com). Push to main also triggers a run.
+#
+# Manual run: Actions → Hackathon sync → Run workflow
+
+name: Hackathon sync
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "* * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: hackathon-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  MERGE_OPEN_PRS: "true"
+  UPDATE_PR_BRANCHES: "true"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Pull default branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          DEFAULT=$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name)
+          echo "DEFAULT_BRANCH=$DEFAULT" >> "$GITHUB_ENV"
+          git fetch origin
+          git checkout "$DEFAULT"
+          git pull origin "$DEFAULT" --no-rebase --no-edit
+
+      - name: Merge open PRs
+        if: env.MERGE_OPEN_PRS == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh pr list --state open --limit 100 --json number,title,isDraft,mergeable \
+            --jq '.[] | select(.isDraft==false) | [.number, .mergeable, .title] | @tsv' \
+            | while IFS=$'\t' read -r number mergeable title; do
+                if [ "$mergeable" != "MERGEABLE" ]; then
+                  echo "Skip PR #$number ($mergeable) $title"
+                  continue
+                fi
+                echo "Merging PR #$number $title"
+                if ! gh pr merge "$number" --merge --delete-branch; then
+                  echo "Immediate merge failed for #$number, enabling auto-merge"
+                  gh pr merge "$number" --merge --auto || echo "Could not merge #$number"
+                fi
+              done
+
+      - name: Merge default branch into open PR branches
+        if: env.UPDATE_PR_BRANCHES == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git fetch origin
+          git checkout "${DEFAULT_BRANCH}"
+          git pull origin "${DEFAULT_BRANCH}" --no-rebase --no-edit
+
+          gh pr list --state open --limit 100 --json headRefName,isDraft \
+            --jq '.[] | select(.isDraft==false) | .headRefName' \
+            | sort -u \
+            | while read -r branch; do
+                [ -z "$branch" ] && continue
+                echo "Updating $branch with ${DEFAULT_BRANCH}"
+                git fetch origin "$branch":"refs/heads/$branch" || {
+                  echo "Could not fetch $branch"
+                  continue
+                }
+                git checkout "$branch"
+                if git merge "origin/${DEFAULT_BRANCH}" --no-edit -m "hackathon-sync: merge ${DEFAULT_BRANCH} into ${branch}"; then
+                  git push origin "$branch"
+                else
+                  git merge --abort || true
+                  echo "Conflict merging ${DEFAULT_BRANCH} into $branch — skipped"
+                fi
+              done
+
+          git checkout "${DEFAULT_BRANCH}"
+
+      - name: Add, commit, and push
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git checkout "${DEFAULT_BRANCH}"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing to commit"
+            exit 0
+          fi
+          git commit -m "hackathon-sync: autosave $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          git pull origin "${DEFAULT_BRANCH}" --no-rebase --no-edit
+          git push origin "${DEFAULT_BRANCH}"
