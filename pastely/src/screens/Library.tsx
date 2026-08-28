@@ -56,6 +56,7 @@ export default function Library({
   const [picked, setPicked] = useState<Set<string>>(() => new Set())
   const [armed, setArmed] = useState(false)
   const [dragId, setDragId] = useState<string | null>(null)
+  const [ghostBox, setGhostBox] = useState({ w: 0, h: 0 })
   const gridRef = useRef<HTMLDivElement>(null)
   const stickersRef = useRef(stickers)
   const editingRef = useRef(editing)
@@ -79,12 +80,14 @@ export default function Library({
   const ghostSrc = ghost ? urls.get(ghost.id) : undefined
 
   function enterEdit(id?: string) {
+    editingRef.current = true
     onEditingChange(true)
     setArmed(false)
     if (id) setPicked(new Set([id]))
   }
 
   function exitEdit() {
+    editingRef.current = false
     onEditingChange(false)
   }
 
@@ -132,6 +135,7 @@ export default function Library({
     ghostX.jump(r.left)
     ghostY.jump(r.top)
     ghostScale.jump(reduce ? 1 : 1.08)
+    setGhostBox({ w: r.width, h: r.height })
     cell.setPointerCapture(e.pointerId)
     dragRef.current = {
       id,
@@ -230,7 +234,7 @@ export default function Library({
       return
     }
     dragRef.current = null
-    if (p.holdFired) return
+    if (e.type === 'pointercancel' || p.holdFired) return
     if (editingRef.current) togglePick(s.id)
     else onOpen(s)
   }
@@ -292,7 +296,7 @@ export default function Library({
         ) : (
           <div className={`sticker-grid ${editing ? 'is-editing' : ''}`} ref={gridRef}>
             <AnimatePresence initial={false}>
-              {stickers.map((s, i) => {
+              {stickers.map((s) => {
                 const isNew = s.id === newId
                 const isSlot = dragId === s.id
                 const isPicked = picked.has(s.id)
@@ -308,7 +312,7 @@ export default function Library({
                     onPointerUp={(e) => onCellUp(s, e)}
                     onPointerCancel={(e) => onCellUp(s, e)}
                     onContextMenu={(e) => e.preventDefault()}
-                    layout={!reduce && !isSlot}
+                    layout={!reduce}
                     whileTap={editing || isSlot ? undefined : { scale: 0.95 }}
                     initial={isNew ? { opacity: 0, scale: 1.3, rotate: -6 } : false}
                     animate={{ opacity: isSlot ? 0 : 1, scale: 1, rotate: 0 }}
@@ -316,7 +320,7 @@ export default function Library({
                     transition={
                       isNew
                         ? { type: 'spring', bounce: 0.5, duration: 0.7 }
-                        : { type: 'spring', bounce: 0, duration: 0.4, delay: isNew ? 0 : Math.min(i * 0.04, 0.24) }
+                        : { type: 'spring', bounce: 0, duration: 0.4 }
                     }
                   >
                     {isNew && <Confetti />}
@@ -354,7 +358,7 @@ export default function Library({
             </button>
           )}
           <button
-            className={`btn ${armed ? 'btn-danger' : 'btn-hold-look'}`}
+            className={`btn ${armed ? 'btn-danger' : 'btn-danger-ghost'}`}
             disabled={nPicked === 0}
             onClick={() => void confirmDelete()}
           >
@@ -369,8 +373,8 @@ export default function Library({
           <motion.div
             className="cell checker drag-ghost"
             style={{
-              width: dragRef.current?.w ?? 0,
-              height: dragRef.current?.h ?? 0,
+              width: ghostBox.w,
+              height: ghostBox.h,
               x: ghostX,
               y: ghostY,
               scale: ghostScale,
