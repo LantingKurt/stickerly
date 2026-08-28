@@ -61,6 +61,8 @@ export default function Library({
   const stickersRef = useRef(stickers)
   const editingRef = useRef(editing)
   const dragRef = useRef<Drag | null>(null)
+  const orderRef = useRef(stickers.map((s) => s.id))
+  const finishing = useRef(false)
   const holdTimer = useRef<number>(0)
   const ghostX = useMotionValue(0)
   const ghostY = useMotionValue(0)
@@ -68,6 +70,7 @@ export default function Library({
 
   stickersRef.current = stickers
   editingRef.current = editing
+  orderRef.current = stickers.map((s) => s.id)
 
   useEffect(() => {
     if (editing) return
@@ -126,6 +129,7 @@ export default function Library({
     const [item] = next.splice(from, 1)
     if (!item) return
     next.splice(to, 0, item)
+    orderRef.current = next
     onReorder(next, false)
   }
 
@@ -202,9 +206,12 @@ export default function Library({
   async function finishDrag() {
     const p = dragRef.current
     const id = p?.id ?? dragId
+    if (finishing.current) return
+    finishing.current = true
     dragRef.current = null
     window.clearTimeout(holdTimer.current)
     if (!id || !p?.moved) {
+      finishing.current = false
       setDragId(null)
       return
     }
@@ -219,10 +226,8 @@ export default function Library({
       ])
     }
     setDragId(null)
-    onReorder(
-      stickersRef.current.map((s) => s.id),
-      true,
-    )
+    onReorder(orderRef.current, true)
+    finishing.current = false
   }
 
   function onCellUp(s: Sticker, e: PE<HTMLButtonElement>) {
@@ -248,7 +253,8 @@ export default function Library({
     const ids = [...picked]
     setArmed(false)
     setPicked(new Set())
-    onEditingChange(false)
+    const remaining = stickersRef.current.length - ids.length
+    if (remaining <= 0) exitEdit()
     onDelete(ids)
   }
 
@@ -295,7 +301,7 @@ export default function Library({
           </div>
         ) : (
           <div className={`sticker-grid ${editing ? 'is-editing' : ''}`} ref={gridRef}>
-            <AnimatePresence initial={false}>
+            <AnimatePresence initial={false} mode="popLayout">
               {stickers.map((s) => {
                 const isNew = s.id === newId
                 const isSlot = dragId === s.id
@@ -363,7 +369,7 @@ export default function Library({
             onClick={() => void confirmDelete()}
           >
             <Icon name="trash" size={18} />
-            {armed ? `Delete ${nPicked}` : nPicked ? `Delete ${nPicked}` : 'Delete'}
+            {armed ? `Delete ${nPicked}?` : nPicked ? `Delete ${nPicked}` : 'Delete'}
           </button>
         </div>
       )}
