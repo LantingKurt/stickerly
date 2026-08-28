@@ -6,3 +6,4 @@
 {"sessionId":"221c2c","timestamp":1787927430532,"location":"pastely/vite.config.ts:env","message":"vite env file probe","hypothesisId":"B","data":{"pastelyEnvLocalExists":true,"rootEnvLocalExists":true,"hasViteSupabaseUrl":true,"hasViteSupabaseAnonKey":true}}
 {"sessionId":"221c2c","timestamp":1787927433147,"location":"pastely/vite.config.ts:resolveId","message":"resolving @supabase/supabase-js","hypothesisId":"A","data":{"id":"@supabase/supabase-js","pkgExists":false}}
 {"sessionId":"221c2c","timestamp":1787927433214,"location":"pastely/vite.config.ts:resolveId","message":"resolving @supabase/supabase-js","hypothesisId":"A","data":{"id":"@supabase/supabase-js","pkgExists":false}}
+{"sessionId":"221c2c","timestamp":1787927487825,"location":"pastely/vite.config.ts:resolveId","message":"resolving @supabase/supabase-js","hypothesisId":"A","data":{"id":"@supabase/supabase-js","pkgExists":false}}
