@@ -273,6 +273,7 @@ button:focus-visible {
   font-size: 1.02rem;
   color: var(--grape);
   padding: 8px 8px;
+  min-height: 44px;
 }
 .lib-hint {
   margin: 0 22px 4px;
@@ -325,6 +326,7 @@ button:focus-visible {
   display: grid;
   place-items: center;
   overflow: hidden;
+  -webkit-touch-callout: none;
 }
 .cell-inner {
   display: grid;
@@ -366,6 +368,7 @@ button:focus-visible {
   z-index: 30;
   pointer-events: none;
   box-shadow: 0 18px 40px rgba(33, 29, 25, 0.28);
+  will-change: transform;
 }
 .edit-bar {
   position: absolute;
