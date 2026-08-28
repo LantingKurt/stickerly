@@ -5421,3 +5421,105 @@ Leave that terminal open. Default is every 1 minute: `git add .`, commit if dirt
 If that laptop is Mac or Linux, run it from PowerShell, or from Git Bash after a clone/pull of `main`. Same file: `scripts/hackathon-sync.ps1`.
 
 They need git already set up (`user.name`, `user.email`, access to `https://github.com/u1yuan/pastely.git`). If they never run that script, they only get updates with a normal `git pull`.
+
+---
+
+_**User**_
+
+The local host is not working, but it's working on Vercel. Identify why?
+
+---
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+Localhost is failing while Vercel works. I need to identify the cause.
+
+Checking the local Vite setup. Likely culprits include HTTPS requirements, missing .env.local variables, certificate rejections, port conflicts, or detached HEAD files.
+
+Vite serves over HTTPS by default, so the browser may be rejecting the connection. I will inspect the terminal output and Vite configuration to confirm the server status and any specific errors.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+I’ll check the local Vite process, URL/protocol, and env setup against what’s deployed on Vercel.
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\.cursor\projects\c-Users-Admin-Downloads-Github-Repos-pastely\terminals\1.txt</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\vite.config.ts</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\package.json</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\pastely\src\lib\supabase.ts</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="search" data-tool-name="glob_file_search"><details>
+<summary>Tool use: **glob_file_search** • Searched codebase "" • **2** results in **1** directory</summary>
+
+Directory: **``** (2 files)
+
+| File |
+|------|
+| `.\pastely\.env.example` |
+| `.\pastely\.env.local` |
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+The terminal output reveals the root cause.
+
+Port 5173 is occupied by a stale Vite process. The active dev server runs on port 5174 via HTTPS. Accessing localhost:5173 returns the old server instead of the current app. The browser may also block the self-signed certificate.
+
+I will probe both ports to confirm what is running. The Supabase configuration is valid since .env.local exists. A blank page could also stem from an unaccepted SSL certificate warning.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2** • Run command: netstat -ano | findstr &#34;:5173 :5174&#34;; Write-Host &#39;--- 5173 http ---&#39;; try { (Invoke-WebRequest -Uri &#39;http://localhost:5173/&#39; -UseBasicParsing -TimeoutSec 5).StatusCode } catch { $_.Exception.Message }; Write-Host &#39;--- 5173 https ---&#39;; try { [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; (Invoke-WebRequest -Uri &#39;https://localhost:5173/&#39; -UseBasicParsing -TimeoutSec 5).StatusCode } catch { $_.Exception.Message }; Write-Host &#39;--- 5174 https ---&#39;; try { [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; (Invoke-WebRequest -Uri &#39;https://localhost:5174/&#39; -UseBasicParsing -TimeoutSec 5).StatusCode } catch { $_.Exception.Message }</summary>
+```bash
+netstat -ano | findstr ":5173 :5174"; Write-Host '--- 5173 http ---'; try { (Invoke-WebRequest -Uri 'http://localhost:5173/' -UseBasicParsing -TimeoutSec 5).StatusCode } catch { $_.Exception.Message }; Write-Host '--- 5173 https ---'; try { [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; (Invoke-WebRequest -Uri 'https://localhost:5173/' -UseBasicParsing -TimeoutSec 5).StatusCode } catch { $_.Exception.Message }; Write-Host '--- 5174 https ---'; try { [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; (Invoke-WebRequest -Uri 'https://localhost:5174/' -UseBasicParsing -TimeoutSec 5).StatusCode } catch { $_.Exception.Message }
+```
+
+```
+  TCP    0.0.0.0:5173           0.0.0.0:0              LISTENING       21048
+  TCP    0.0.0.0:5174           0.0.0.0:0              LISTENING       21668
+  TCP    [::]:5173              [::]:0                 LISTENING       21048
+  TCP    [::]:5174              [::]:0                 LISTENING       21668
+  TCP    [::1]:5174             [::1]:53119            ESTABLISHED     21668
+  TCP    [::1]:5174             [::1]:64586            ESTABLISHED     21668
+  TCP    [::1]:49670            [::1]:5174             TIME_WAIT       0
+  TCP    [::1]:53119            [::1]:5174             ESTABLISHED     14760
+  TCP    [::1]:60667            [::1]:5174             TIME_WAIT       0
+  TCP    [::1]:64586            [::1]:5174             ESTABLISHED     14760
+--- 5173 http ---
+The underlying connection was closed: The connection was closed unexpectedly.
+--- 5173 https ---
+The underlying connection was closed: An unexpected error occurred on a send.
+--- 5174 https ---
+The underlying connection was closed: An unexpected error occurred on a send.
+
+```
+</details></tool-use>
