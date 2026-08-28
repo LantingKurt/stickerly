@@ -289,7 +289,10 @@ export default function PlaySticker({
         if (pointers.current.size === 0) release(e)
       }}
       onPointerLeave={reset}
-      onPointerCancel={onPointerUp}
+      onPointerCancel={(e) => {
+        onPointerUp(e)
+        reset()
+      }}
     >
       {svg && (
         <svg

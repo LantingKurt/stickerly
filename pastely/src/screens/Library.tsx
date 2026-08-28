@@ -29,6 +29,111 @@ function tilt(id: string) {
   return (Math.abs(h) % 5) - 2
 }
 
+function LibraryCell({
+  s,
+  src,
+  isNew,
+  isSlot,
+  isPicked,
+  editing,
+  reduce,
+  onDown,
+  onMove,
+  onUp,
+}: {
+  s: Sticker
+  src: string | undefined
+  isNew: boolean
+  isSlot: boolean
+  isPicked: boolean
+  editing: boolean
+  reduce: boolean | null
+  onDown: (e: PE<HTMLButtonElement>) => void
+  onMove: (e: PE<HTMLButtonElement>) => void
+  onUp: (e: PE<HTMLButtonElement>) => void
+}) {
+  const cell = useRef<HTMLButtonElement>(null)
+  const { rotateX, rotateY, moveX, moveY, glare, track, release, reset, reduce: reduceTilt } = useTicketTilt(cell)
+  const live = !editing && !isSlot && !reduceTilt
+
+  return (
+    <motion.button
+      ref={cell}
+      data-sticker-id={s.id}
+      className={`cell checker ${isPicked ? 'picked' : ''} ${isSlot ? 'is-slot' : ''}`}
+      aria-pressed={editing ? isPicked : undefined}
+      aria-label={editing ? (isPicked ? 'Deselect sticker' : 'Select sticker') : 'Open sticker'}
+      onPointerDown={(e) => {
+        onDown(e)
+        if (live) track(e)
+      }}
+      onPointerMove={(e) => {
+        onMove(e)
+        if (live) track(e)
+      }}
+      onPointerUp={(e) => {
+        onUp(e)
+        if (live) release(e)
+      }}
+      onPointerCancel={(e) => {
+        onUp(e)
+        reset()
+      }}
+      onPointerLeave={() => {
+        if (live) reset()
+      }}
+      onContextMenu={(e) => e.preventDefault()}
+      layout={!reduce}
+      whileTap={editing || isSlot ? undefined : { scale: 0.95 }}
+      initial={isNew ? { opacity: 0, scale: 1.3, rotate: -6 } : false}
+      animate={{ opacity: isSlot ? 0 : 1, scale: 1, rotate: 0 }}
+      exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.95 }}
+      transition={
+        isNew
+          ? { type: 'spring', bounce: 0.5, duration: 0.7 }
+          : { type: 'spring', bounce: 0, duration: 0.4 }
+      }
+    >
+      {isNew && <Confetti />}
+      {isNew && (
+        <motion.span
+          className="badge-new"
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', bounce: 0.5, duration: 0.6, delay: 0.3 }}
+        >
+          NEW
+        </motion.span>
+      )}
+      {editing && (
+        <span className={`cell-check ${isPicked ? 'on' : ''}`}>
+          {isPicked && <Icon name="check" size={13} />}
+        </span>
+      )}
+      <motion.div
+        className="cell-inner"
+        style={
+          live
+            ? { rotateX, rotateY, x: moveX, y: moveY, rotate: tilt(s.id) }
+            : { rotate: tilt(s.id) }
+        }
+      >
+        {src && <StickerImg src={src} size="sm" />}
+        {live && src && (
+          <div
+            className="sticker-light"
+            style={{ WebkitMaskImage: `url(${src})`, maskImage: `url(${src})` }}
+            aria-hidden
+          >
+            <span className="gt-sheen" />
+            <motion.span className="gt-glare" style={{ background: glare }} />
+          </div>
+        )}
+      </motion.div>
+    </motion.button>
+  )
+}
+
 interface Drag {
   id: string
   pointerId: number
@@ -295,55 +400,21 @@ export default function Library({
         ) : (
           <div className={`sticker-grid ${editing ? 'is-editing' : ''}`} ref={gridRef}>
             <AnimatePresence initial={false} mode="popLayout">
-              {stickers.map((s) => {
-                const isNew = s.id === newId
-                const isSlot = dragId === s.id
-                const isPicked = picked.has(s.id)
-                return (
-                  <motion.button
-                    key={s.id}
-                    data-sticker-id={s.id}
-                    className={`cell checker ${isPicked ? 'picked' : ''} ${isSlot ? 'is-slot' : ''}`}
-                    aria-pressed={editing ? isPicked : undefined}
-                    aria-label={editing ? (isPicked ? 'Deselect sticker' : 'Select sticker') : 'Open sticker'}
-                    onPointerDown={(e) => onCellDown(s, e)}
-                    onPointerMove={(e) => onCellMove(s, e)}
-                    onPointerUp={(e) => onCellUp(s, e)}
-                    onPointerCancel={(e) => onCellUp(s, e)}
-                    onContextMenu={(e) => e.preventDefault()}
-                    layout={!reduce}
-                    whileTap={editing || isSlot ? undefined : { scale: 0.95 }}
-                    initial={isNew ? { opacity: 0, scale: 1.3, rotate: -6 } : false}
-                    animate={{ opacity: isSlot ? 0 : 1, scale: 1, rotate: 0 }}
-                    exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.95 }}
-                    transition={
-                      isNew
-                        ? { type: 'spring', bounce: 0.5, duration: 0.7 }
-                        : { type: 'spring', bounce: 0, duration: 0.4 }
-                    }
-                  >
-                    {isNew && <Confetti />}
-                    {isNew && (
-                      <motion.span
-                        className="badge-new"
-                        initial={{ scale: 0.5, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ type: 'spring', bounce: 0.5, duration: 0.6, delay: 0.3 }}
-                      >
-                        NEW
-                      </motion.span>
-                    )}
-                    {editing && (
-                      <span className={`cell-check ${isPicked ? 'on' : ''}`}>
-                        {isPicked && <Icon name="check" size={13} />}
-                      </span>
-                    )}
-                    <div className="cell-inner" style={{ transform: `rotate(${tilt(s.id)}deg)` }}>
-                      {urls.get(s.id) && <StickerImg src={urls.get(s.id)!} size="sm" />}
-                    </div>
-                  </motion.button>
-                )
-              })}
+              {stickers.map((s) => (
+                <LibraryCell
+                  key={s.id}
+                  s={s}
+                  src={urls.get(s.id)}
+                  isNew={s.id === newId}
+                  isSlot={dragId === s.id}
+                  isPicked={picked.has(s.id)}
+                  editing={editing}
+                  reduce={reduce}
+                  onDown={(e) => onCellDown(s, e)}
+                  onMove={(e) => onCellMove(s, e)}
+                  onUp={(e) => onCellUp(s, e)}
+                />
+              ))}
             </AnimatePresence>
           </div>
         )}

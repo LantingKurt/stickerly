@@ -326,13 +326,17 @@ button:focus-visible {
   display: grid;
   place-items: center;
   overflow: hidden;
+  perspective: 700px;
+  transform-style: preserve-3d;
   -webkit-touch-callout: none;
 }
 .cell-inner {
   display: grid;
   place-items: center;
+  position: relative;
   width: 100%;
   height: 100%;
+  transform-style: preserve-3d;
 }
 .cell-inner .diecut-sm { max-width: 76%; max-height: 76%; }
 .cell.picked { box-shadow: inset 0 0 0 2.5px var(--grape); }
@@ -702,17 +706,6 @@ button:focus-visible {
   -webkit-mask-position: center;
   mask-position: center;
 }
-.sticker-sheen {
-  position: absolute;
-  inset: -40%;
-  background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.4) 50%, transparent 58%);
-  animation: gt-sheen 3.8s var(--ease-in-out) infinite;
-}
-.sticker-glare {
-  position: absolute;
-  inset: 0;
-  mix-blend-mode: soft-light;
-}
 .play-chrome { flex: none; }
 .sheet-stage {
   flex: 1;
@@ -819,6 +812,6 @@ button:focus-visible {
   .confetti { display: none; }
   .cell-inner { transform: none !important; }
   .play-sticker { transition: none; }
-  .gt-sway, .gt-sheen, .sticker-sheen { animation: none; }
-  .gt-sheen, .gt-glare, .sticker-sheen, .sticker-glare { display: none; }
+  .gt-sway, .gt-sheen { animation: none; }
+  .gt-sheen, .gt-glare { display: none; }
 }
