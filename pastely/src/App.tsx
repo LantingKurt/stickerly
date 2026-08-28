@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { AnimatePresence, motion } from 'motion/react'
+import { AnimatePresence } from 'motion/react'
 import Camera from './screens/Camera'
 import Preview from './screens/Preview'
 import Library from './screens/Library'

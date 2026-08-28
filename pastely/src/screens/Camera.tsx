@@ -86,6 +86,9 @@ export default function Camera({ onCapture, onClose, latestUrl }: Props) {
         <video ref={videoRef} autoPlay playsInline muted />
       </div>
       <div className="wordmark">Pastel<span className="y">y</span></div>
+      <button className="play-close pressable" aria-label="Close camera" onClick={onClose}>
+        <Icon name="close" size={18} />
+      </button>
       <div className="corners">
         <div className="corner tl" /><div className="corner tr" />
         <div className="corner bl" /><div className="corner br" />
