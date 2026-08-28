@@ -2592,26 +2592,209 @@ A k-means color-clustering approach is being considered: split the image into tw
 
 I will read the image and the fallback-cutout.js and cutout.js files to pinpoint the exact artifact. The planned improvements include gradient-tolerant flood-fill using local color distance, chroma-key with erosion, and feathering via blur and re-threshold. The mask will be cropped to the bounding box of opaque pixels to prevent leftover table from showing. I am also weighing whether to raise the fallback resolution or if imgly is still performing poorly.
 
-The screenshot suggests the fallback flood-fill is active rather than imgly, since ML would cut tighter around the sticker. A connected-component background removal algorithm is being drafted: resize to roughly 640px,
+The screenshot suggests the fallback flood-fill is active rather than imgly, since ML would cut tighter around the sticker. A connected-component background removal algorithm is being drafted: resize to roughly 640px, convert to LAB or RGB, and isolate the background.
+
+The algorithm will flood from all border pixels using relative color distance with a threshold of 25–35. It will also permit a slightly larger global distance to the running mean of background pixels. After the flood, the remaining opaque region is the sticker plus any attached table. Morphological erosion of one to two pixels followed by three-pixel blur will smooth the alpha edge. The mask will be cropped to the bounding box of opaque pixels with padding, and the mask will be scaled back if it was processed on a downscaled copy.
+
+Tight cropping to the sticker bounding box would not fix the jaggy left edge if the leftover table is attached to the sticker. A better flood-fill rule compares each pixel to its immediate neighbor background pixel using a local threshold, while also checking against a global background average with a separate global threshold.
+
+A center-bias rule is being added: pixels near the center need stronger evidence to qualify as background, since stickers are typically framed in the middle. K-means or Otsu on border pixels will provide a more robust background color estimate. The jagged edges might also stem from imgly’s quint8 encoding at 512px.
+
+Imgly failure on iOS may be worse than a bad fallback. A 40 MB model could download only to produce a jagged crop. The better path is to bypass imgly entirely on iOS and run a dedicated sticker-on-table algorithm immediately.
+
+Desktop will keep imgly. iOS will skip it entirely and use a faster custom algorithm. The plan is to blur the image, compute gradient magnitude or chroma distance from a sampled border background, threshold to binary, and keep the largest connected component that does not touch the image border. That component is the sticker.
+
+The background model will sample the inner eight-pixel border strip to compute a median color and median absolute deviation for an adaptive threshold. This method is more robust than flood-fill if the background estimate is accurate. It assumes the sticker is reasonably framed and will not touch the image edge.
+
+The left edge is jaggy because shadows and gradients break a flat global threshold. Local color distance will replace global distance. A local threshold of about 28 and a global threshold of about 55 will both qualify pixels. Background holes will be filled in the foreground. Small leftover components will be discarded.
+
+One-pixel erosion will cut halos, followed by a two-to-three-pixel Gaussian blur for anti-aliasing. The mask will be cropped to the sticker bounding box with eight-pixel padding. Holes inside the sticker will remain transparent. To smooth jaggy edges, the binary mask will be blurred and re-thresholded at 0.5 before use.
+
+Fallback resolution will rise to 1024px now that WASM memory pressure is reduced. The iOS cropper is confirmed to be the fallback path.
 </details></think>
 
 _**Agent (grok-4.6)**_
 
+That jagged left edge is the emergency flood-fill, not a real mask. I’ll look at the preview and replace it with a tighter sticker cut.
+
+_**Agent (grok-4.6)**_
+
 <tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
-<summary>Tool use: **read_file_v2** • Read file: </summary>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\.cursor\projects\c-Users-Admin-Downloads-Github-Repos-pastely\assets\c__Users_Admin_AppData_Roaming_Cursor_User_workspaceStorage_6e35673e88ce418df7b565e7336fbe8c_images_image-cdb09787-59cd-45a8-8b8c-fc8ab89c14cb.png</summary>
 
 </details></tool-use>
 
 _**Agent (grok-4.6)**_
 
 <tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
-<summary>Tool use: **read_file_v2** • Read file: </summary>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\src\fallback-cutout.js</summary>
 
 </details></tool-use>
 
 _**Agent (grok-4.6)**_
 
 <tool-use data-tool-type="read" data-tool-name="read_file_v2"><details>
-<summary>Tool use: **read_file_v2** • Read file: </summary>
+<summary>Tool use: **read_file_v2** • Read file: C:\Users\Admin\Downloads\Github Repos\pastely\src\cutout.js</summary>
 
 </details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+The screenshot confirms jagged left coastline through the table. A black rounded square sticker sits in the center.
+
+The classic global-threshold flood fill fails on lighting gradients. I'll rewrite the cutout pipeline. iOS will skip imgly and use an improved computer vision sticker extractor instead. Desktop will try imgly first, then fall back to the improved CV method. The new algorithm uses gradient-tolerant flood fill, largest component selection, feathering, and tight cropping.
+
+Processing at 640–800 px preserves quality without WASM. The algorithm samples an 8 px border strip to compute a median RGB. Flood fill expands from that border using a local threshold against the parent color and a global threshold against the median. This tolerates lighting gradients. Connected components are labeled and the largest foreground region is kept.
+
+Small holes inside the sticker mask will be filled by treating the mask border as the background boundary. Speckle artifacts from the table are removed by the largest component selection. The mask will then be smoothed.
+
+The mask will be blurred and clamped to a 0–255 alpha range. The crop will tighten to the bounding box of alpha above 8 and pad 12 px. Local threshold is set to 30–36 and global to 52–60. The jaggy left edge came from shadows failing the old 48 threshold against the corner white.
+
+Local comparison prevents distant shadows from being misclassified as background. The sticker is nearly black against a light table, so its distance from the median is large enough to survive. The local threshold should sit near 40–45 to catch darker table shadows without leaking onto the sticker.
+
+A two-pixel morphological erosion will remove residual shadow halos before smoothing the mask.
+
+iOS will run at 960 px resolution without WASM overhead. Desktop will keep imgly as the first attempt. The flood-fill implementation compares each pixel to its immediate neighbor’s RGB rather than the original border color.
+
+The flood-fill seed pixels will be selected from the border strip using the global threshold first. This avoids starting from sticker edges that touch the frame. Each expanded pixel is compared against both its immediate neighbor and the median color, and either local or global tolerance lets it join the background mask.
+
+The flood-fill seed strategy risks destroying interior holes. A ring-shaped sticker would leave its hole opaque because that area is disconnected from the border. Solid stickers have no holes, so the hole-fill step should be skipped or limited to speckle artifacts smaller than half a percent of the image.
+
+Blur alone would create a semi-transparent halo around the sticker. Eroding the mask by one to two pixels first removes the table fringe, then a two-pixel blur smooths the edge for antialiasing.
+
+The erosion logic keeps a foreground pixel only if every neighbor is also foreground. The crop will pad 10 px and slightly increase mask contrast. iOS will use 896 px resolution. No unsharp mask will be applied.
+
+The local threshold is fixed at 38 and the global threshold at 58. Seed tolerance is 72. The border median is sampled from a 6 px strip. A 1024 px iOS resolution replaces the 960 px plan because WASM is no longer loaded. The 512 px upsample is dropped in favor of 960 px for sharper quality.
+
+The CV path will skip JPEG encoding entirely. It will receive the raw canvas image data directly instead of a JPEG blob. This removes generation loss from resize-to-max and edge-cutout. The iOS stickerCutout will handle its own canvas resize. Desktop will keep the imgly path with JPEG resizing, falling back to stickerCutout if needed.
+
+The full algorithm will live in fallback-cutout.js as stickerCutout(file, maxEdge). The edgeCutout export will be preserved for compatibility. The code stays in one file with minimal abstraction. A separable box blur will smooth the alpha channel.
+
+The separable blur averages each pixel across a window of ±radius horizontally, then vertically. The resulting alpha values overwrite the original image’s alpha channel while the RGB colors stay untouched.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+The jaggy left edge is the flood-fill dying on table shadows, then getting stretched from 512px. I’ll skip imgly on iPhone, cut at full-ish resolution, and follow lighting so the mask hugs the sticker.
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\src\fallback-cutout.js</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+Invalid arguments:
+path: Required
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2**</summary>
+Invalid arguments:
+path: Required
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+A string replacement failed because the file path was missing.
+
+Writing cutout.js completely.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="write" data-tool-name="edit_file_v2"><details>
+<summary>Tool use: **edit_file_v2** • Edit file: C:\Users\Admin\Downloads\Github Repos\pastely\src\cutout.js</summary>
+
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+Found a bug in the keepLargest neighbor check.
+
+The neighbor check correctly rejects wrapped coordinates. Manhattan distance is not 1 at image edges.
+
+Uint8Array operations are compatible with blurAlpha. A 2-pixel erosion radius is safe for stickers. The keepLargest neighbor walk uses DFS via a stack; this is acceptable for one million pixels. Wrap-around logic can be simplified with direct x and y checks.
+
+Switching keepLargest to explicit x and y coordinates for speed and safety. Building to verify syntax. iOS Safari detection works. The 1% opacity threshold in stickerCutout is acceptable.
+
+If flood fails to isolate the sticker, the entire image becomes the largest component. This yields a tight crop rather than jagged edges. A false flood fill is unlikely for black text on cream. Uint8Array.map preserves integer values correctly.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_command_v2"><details>
+<summary>Tool use: **run_terminal_command_v2** • Run command: npm run build</summary>
+```bash
+npm run build
+```
+
+```
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm.
+
+> pastely@0.0.1 build
+> vite build
+
+vite v6.4.3 building for production...
+transforming...
+✓ 12 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                             2.70 kB │ gzip:     0.91 kB
+dist/assets/ort.bundle.min-OfoG_cy9.mjs                   399.90 kB
+dist/assets/ort.webgpu.bundle.min-CEayb2S6.mjs            399.92 kB
+dist/assets/ort-wasm-simd-threaded.jsep-D5Jk56-t.wasm  23,914.39 kB │ gzip: 5,662.56 kB
+dist/assets/index-B065Xw8U.css                              1.78 kB │ gzip:     0.76 kB
+dist/assets/index-CLv2BAfA.js                              11.49 kB │ gzip:     4.74 kB
+dist/assets/index-DtZJK93G.js                              82.60 kB │ gzip:    22.43 kB
+dist/assets/ort.bundle.min-DPTirkXM.js                    399.13 kB │ gzip:   109.22 kB
+dist/assets/ort.webgpu.bundle.min-DDHOaC1R.js             399.14 kB │ gzip:   109.22 kB
+✓ built in 2.03s
+
+```
+</details></tool-use>
+
+_**Agent (grok-4.6)**_
+
+<think><details><summary>Thought Process</summary>
+The build succeeded. I'll explain the improvements clearly.
+
+Hackathon sync should push. A hard refresh on the phone may be needed.
+</details></think>
+
+_**Agent (grok-4.6)**_
+
+That jaggy left edge was the emergency flood-fill chewing through table shadows, then stretching a 512px JPEG.
+
+On iPhone it now skips the broken WASM model and does a real sticker cut: follow lighting from the photo border, keep the largest shape, nibble the halo, feather the edge, crop tight.
+
+Hard-refresh after Vercel deploys, then shoot again. Frame the sticker fully in shot with a bit of table around it.
+
+---
+
+_**User**_
+
+<timestamp>Friday, Aug 28, 2026, 9:30 PM (UTC+8)</timestamp>
+<system_notification>
+The following task has finished. If you were already aware, ignore this notification and do not restate prior responses.
+
+<task>
+kind: shell
+status: aborted
+task_id: 694196
+title: Start Vite preview server
+tool_call_id: call-496c7ef7-34bd-4687-bc10-f23b0ef25291-49
+fc_d6771ee5-139a-9f78-89e9-9002b107905f_0
+output_path: C:\Users\Admin\.cursor\projects\c-Users-Admin-Downloads-Github-Repos-pastely\terminals\694196.txt
+</task>
+</system_notification>
+<user_query>Briefly inform the user about the task result and perform any follow-up actions (if needed). If there's no follow-ups needed, don't explicitly say that.</user_query>
