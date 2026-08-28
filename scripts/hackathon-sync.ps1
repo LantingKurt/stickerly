@@ -1,4 +1,4 @@
-# Local hackathon loop: git add -A, commit if dirty, pull (merge), push.
+# Local hackathon loop: git add ., commit if dirty, pull (merge), push.
 # Does not force-push. Aborts a conflicted merge and waits for the next tick.
 #
 #   .\scripts\hackathon-sync.ps1
@@ -40,7 +40,7 @@ function Sync-Once {
     }
 
     if (-not $NoCommit) {
-        $null = Invoke-Git @("add", "-A")
+        $null = Invoke-Git @("add", ".")
         $dirty = git status --porcelain
         if ($dirty) {
             $stamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
