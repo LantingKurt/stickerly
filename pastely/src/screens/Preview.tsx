@@ -24,6 +24,7 @@ export default function Preview({ imageUrl, processing, cutoutFailed, onKeep, on
   return (
     <motion.div
       className="screen"
+      style={{ zIndex: 7 }}
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.98 }}
