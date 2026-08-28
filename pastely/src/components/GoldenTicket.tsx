@@ -25,17 +25,20 @@ export function useTicketTilt(field: RefObject<HTMLElement | null>) {
   const rotateY = useTransform(sx, [-1, 1], [-22, 22])
   const moveX = useTransform(sx, [-1, 1], [-10, 10])
   const moveY = useTransform(sy, [-1, 1], [-6, 6])
-  const glareX = useTransform(sx, [-1, 1], [18, 82])
-  const glareY = useTransform(sy, [-1, 1], [12, 88])
-  const glare = useMotionTemplate`radial-gradient(circle 130px at ${glareX}% ${glareY}%, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.18) 38%, rgba(255, 255, 255, 0) 70%)`
-  const stickerGlare = useMotionTemplate`radial-gradient(circle 8% at ${glareX}% ${glareY}%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 70%)`
+  const glareX = useTransform(sx, [-1, 1], [6, 94])
+  const glareY = useTransform(sy, [-1, 1], [8, 92])
+  const glare = useMotionTemplate`radial-gradient(circle 48% at ${glareX}% ${glareY}%, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.2) 34%, rgba(255, 255, 255, 0) 68%)`
+  const stickerGlare = useMotionTemplate`radial-gradient(circle 42% at ${glareX}% ${glareY}%, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 70%)`
 
   function track(e: PE) {
-    const el = field.current
-    if (!el || reduce) return
+    if (reduce) return
+    const el = e.currentTarget instanceof HTMLElement ? e.currentTarget : field.current
+    if (!el) return
     const r = el.getBoundingClientRect()
-    px.set(Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1)))
-    py.set(Math.max(-1, Math.min(1, ((e.clientY - r.top) / r.height) * 2 - 1)))
+    const w = r.width || 1
+    const h = r.height || 1
+    px.set(Math.max(-1, Math.min(1, ((e.clientX - r.left) / w) * 2 - 1)))
+    py.set(Math.max(-1, Math.min(1, ((e.clientY - r.top) / h) * 2 - 1)))
   }
 
   function release(e: PE) {
@@ -51,19 +54,11 @@ export function useTicketTilt(field: RefObject<HTMLElement | null>) {
 }
 
 export default function GoldenTicket({ onRedeem }: Props) {
-  const field = useRef<HTMLDivElement>(null)
-  const { rotateX, rotateY, moveX, moveY, glare, track, release, reset, reduce } = useTicketTilt(field)
+  const ticket = useRef<HTMLButtonElement>(null)
+  const { rotateX, rotateY, moveX, moveY, glare, track, release, reset, reduce } = useTicketTilt(ticket)
 
   return (
-    <div
-      ref={field}
-      className="ticket-field"
-      onPointerDown={track}
-      onPointerMove={track}
-      onPointerUp={release}
-      onPointerLeave={reset}
-      onPointerCancel={reset}
-    >
+    <div className="ticket-field">
       <motion.div
         className="gt-drop"
         initial={reduce ? { opacity: 0 } : { opacity: 0, y: '-70%' }}
@@ -78,12 +73,18 @@ export default function GoldenTicket({ onRedeem }: Props) {
         }
       >
         <motion.button
+          ref={ticket}
           type="button"
           className="golden-ticket"
           onClick={onRedeem}
           aria-label="Golden ticket — take a picture of a sticker"
           style={reduce ? undefined : { rotateX, rotateY, x: moveX, y: moveY }}
           whileTap={reduce ? undefined : { scale: 0.96 }}
+          onPointerDown={track}
+          onPointerMove={track}
+          onPointerUp={release}
+          onPointerLeave={reset}
+          onPointerCancel={reset}
         >
           <span className="gt-sway">
             <span className="gt-body">

@@ -609,7 +609,7 @@ button:focus-visible {
   z-index: 2;
   opacity: 0;
   mix-blend-mode: normal;
-  background: radial-gradient(circle 130px at 30% 22%, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.16) 40%, transparent 70%);
+  background: radial-gradient(circle 48% at 50% 40%, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.16) 40%, transparent 70%);
   transition: opacity 160ms var(--ease-out);
 }
 .golden-ticket:hover .gt-glare,
@@ -681,7 +681,7 @@ button:focus-visible {
   pointer-events: none;
 }
 .ticket-modal .play-close,
-.ticket-modal .ticket-field {
+.ticket-modal .golden-ticket {
   pointer-events: auto;
 }
 .playground { top: 4%; }
