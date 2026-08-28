@@ -104,17 +104,23 @@ export async function cutOutSticker(file, onProgress) {
 
   try {
     const remove = await loadImgly();
-    return await remove(small, {
-      device: "cpu",
-      model: "small",
-      proxyToWorker: false,
-      publicPath:
-        "https://staticimgly.com/@imgly/background-removal-data/1.7.0/dist/",
-      output: { format: "image/png" },
-      progress: (key, current, total) => {
-        if (onProgress && total) onProgress(key, current, total);
-      },
-    });
+    const blob = await Promise.race([
+      remove(small, {
+        device: "cpu",
+        model: "small",
+        proxyToWorker: false,
+        publicPath:
+          "https://staticimgly.com/@imgly/background-removal-data/1.7.0/dist/",
+        output: { format: "image/png" },
+        progress: (key, current, total) => {
+          if (onProgress && total) onProgress(key, current, total);
+        },
+      }),
+      new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Cutout timed out")), 90_000);
+      }),
+    ]);
+    return blob;
   } catch (err) {
     console.warn("On-device model failed, using edge cutout", err);
     return edgeCutout(small);
