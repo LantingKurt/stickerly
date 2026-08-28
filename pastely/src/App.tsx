@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { AnimatePresence } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import Camera from './screens/Camera'
 import Preview from './screens/Preview'
 import Library from './screens/Library'
 import Detail from './screens/Detail'
+import Icon from './components/Icon'
+import { DieCutDefs } from './components/StickerImg'
 import { cutoutSticker } from './lib/cutout'
+import { buzz } from './lib/haptics'
 import { saveSticker, listStickers, deleteSticker, type Sticker } from './lib/store'
 
 interface Shot {
@@ -24,14 +27,25 @@ export default function App() {
   const refresh = useCallback(async () => setStickers(await listStickers()), [])
   useEffect(() => { refresh() }, [refresh])
 
+  useEffect(() => {
+    if (!newId) return
+    const t = setTimeout(() => setNewId(null), 5000)
+    return () => clearTimeout(t)
+  }, [newId])
+
   const urls = useMemo(() => {
     const map = new Map<string, string>()
     for (const s of stickers) map.set(s.id, URL.createObjectURL(s.blob))
     return map
   }, [stickers])
 
+  const latestUrl = useMemo(() => {
+    const latest = [...stickers].sort((a, b) => b.createdAt - a.createdAt)[0]
+    return latest ? urls.get(latest.id) : undefined
+  }, [stickers, urls])
+
   async function handleCapture(photo: Blob) {
-    setShot({ cutoutBlob: null, url: null, processing: true, failed: false })
+    setShot({ cutoutBlob: null, url: URL.createObjectURL(photo), processing: true, failed: false })
     try {
       const cutout = await cutoutSticker(photo)
       setShot({ cutoutBlob: cutout, url: URL.createObjectURL(cutout), processing: false, failed: false })
@@ -43,6 +57,7 @@ export default function App() {
 
   async function handleKeep() {
     if (!shot?.cutoutBlob) return
+    buzz([10, 40, 10])
     const saved = await saveSticker(shot.cutoutBlob)
     await refresh()
     setNewId(saved.id)
@@ -58,7 +73,8 @@ export default function App() {
 
   return (
     <>
-      {tab === 'camera' && !shot && <Camera onCapture={handleCapture} />}
+      <DieCutDefs />
+      {tab === 'camera' && !shot && <Camera onCapture={handleCapture} latestUrl={latestUrl} />}
       {tab === 'library' && (
         <Library
           stickers={stickers}
@@ -96,12 +112,26 @@ export default function App() {
 
       {!shot && (
         <nav className="tabbar">
-          <button className={`tab pressable ${tab === 'library' ? 'active' : ''}`} onClick={() => setTab('library')}>
-            <span className="glyph">⭐</span>Library
-          </button>
-          <button className={`tab pressable ${tab === 'camera' ? 'active' : ''}`} onClick={() => setTab('camera')}>
-            <span className="glyph">📷</span>Camera
-          </button>
+          {(['library', 'camera'] as const).map((t) => (
+            <button
+              key={t}
+              className={`tab pressable ${tab === t ? 'active' : ''}`}
+              onClick={() => setTab(t)}
+              aria-label={t === 'library' ? 'Library' : 'Camera'}
+            >
+              {tab === t && (
+                <motion.span
+                  layoutId="tab-pill"
+                  className="tab-pill"
+                  transition={{ type: 'spring', bounce: 0.25, duration: 0.45 }}
+                />
+              )}
+              <span className="tab-content">
+                <Icon name={t === 'library' ? 'sparkles' : 'camera'} size={20} />
+                {t === 'library' ? 'Library' : 'Camera'}
+              </span>
+            </button>
+          ))}
         </nav>
       )}
     </>
