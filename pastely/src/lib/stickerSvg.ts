@@ -4,6 +4,8 @@ const ALPHA = 32
 export interface Silhouette {
   width: number
   height: number
+  contentW: number
+  contentH: number
   d: string
 }
 
@@ -26,7 +28,7 @@ async function trace(src: string): Promise<Silhouette> {
 
   const width = img.naturalWidth || img.width
   const height = img.naturalHeight || img.height
-  if (!width || !height) return { width: 1, height: 1, d: 'M0 0H1V1H0Z' }
+  if (!width || !height) return { width: 1, height: 1, contentW: 1, contentH: 1, d: 'M0 0H1V1H0Z' }
 
   const sample = Math.min(1, MAX_EDGE / Math.max(width, height))
   const cw = Math.max(1, Math.round(width * sample))
@@ -43,12 +45,25 @@ async function trace(src: string): Promise<Silhouette> {
 
   const mask = new Uint8Array(cw * ch)
   let opaque = 0
+  let minX = cw
+  let minY = ch
+  let maxX = -1
+  let maxY = -1
   for (let i = 0; i < mask.length; i++) {
     if (pixels[i * 4 + 3] > ALPHA) {
       mask[i] = 1
       opaque++
+      const x = i % cw
+      const y = (i / cw) | 0
+      if (x < minX) minX = x
+      if (y < minY) minY = y
+      if (x > maxX) maxX = x
+      if (y > maxY) maxY = y
     }
   }
+
+  const contentW = maxX < minX ? width : Math.max(1, (maxX - minX + 1) * (width / cw))
+  const contentH = maxY < minY ? height : Math.max(1, (maxY - minY + 1) * (height / ch))
 
   if (opaque < mask.length * 0.01) return rectPath(width, height)
 
@@ -59,11 +74,11 @@ async function trace(src: string): Promise<Silhouette> {
   const sy = height / ch
   const simplified = simplify(contour, 1.4)
   const d = toPath(simplified, sx, sy)
-  return { width, height, d }
+  return { width, height, contentW, contentH, d }
 }
 
 function rectPath(width: number, height: number): Silhouette {
-  return { width, height, d: `M0 0H${width}V${height}H0Z` }
+  return { width, height, contentW: width, contentH: height, d: `M0 0H${width}V${height}H0Z` }
 }
 
 function outline(mask: Uint8Array, w: number, h: number): [number, number][] | null {

@@ -87,7 +87,7 @@ export default function PlaySticker({
         if (live) setSvg(s)
       })
       .catch(() => {
-        if (live) setSvg({ width: 512, height: 512, d: 'M0 0H512V512H0Z' })
+        if (live) setSvg({ width: 512, height: 512, contentW: 512, contentH: 512, d: 'M0 0H512V512H0Z' })
       })
     return () => {
       live = false
@@ -336,7 +336,7 @@ export default function PlaySticker({
 
 function fit(svg: Silhouette | null, deskW: number, deskH: number) {
   if (!svg || !deskW || !deskH) return { dw: 0, dh: 0 }
-  const max = Math.min(deskW, deskH) * 0.48
-  const s = Math.min(max / svg.width, max / svg.height)
+  const max = Math.min(deskW, deskH) * 0.78
+  const s = Math.min(max / svg.contentW, max / svg.contentH)
   return { dw: svg.width * s, dh: svg.height * s }
 }
