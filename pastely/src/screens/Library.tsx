@@ -378,11 +378,6 @@ export default function Library({
               {editing ? 'Done' : 'Select'}
             </button>
           )}
-          {!editing && (
-            <button className="icon-btn pressable" aria-label="Open camera" onClick={onCamera}>
-              <Icon name="camera" size={20} />
-            </button>
-          )}
         </div>
       </header>
       {editing && stickers.length > 0 && (

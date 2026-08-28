@@ -5,10 +5,11 @@ import { buzz } from '../lib/haptics'
 
 interface Props {
   onCapture: (blob: Blob) => void
+  onClose: () => void
   latestUrl?: string
 }
 
-export default function Camera({ onCapture, latestUrl }: Props) {
+export default function Camera({ onCapture, onClose, latestUrl }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -65,6 +66,9 @@ export default function Camera({ onCapture, latestUrl }: Props) {
     return (
       <div className="screen screen--dark">
         <div className="wordmark">Pastel<span className="y">y</span></div>
+        <button className="play-close pressable" aria-label="Close camera" onClick={onClose}>
+          <Icon name="close" size={18} />
+        </button>
         <div className="camera-error">
           <p>Camera is blocked. Allow camera access, or choose a photo instead.</p>
           <button className="btn btn-solid pressable" style={{ flex: 'none', padding: '14px 28px' }} onClick={() => fileRef.current?.click()}>

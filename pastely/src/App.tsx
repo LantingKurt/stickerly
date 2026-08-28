@@ -46,12 +46,17 @@ function urlsFor(stickers: Sticker[]): Map<string, string> {
 }
 
 export default function App() {
-  const [tab, setTab] = useState<'camera' | 'library'>('camera')
+  const [cameraOpen, setCameraOpen] = useState(false)
   const [shot, setShot] = useState<Shot | null>(null)
   const [stickers, setStickers] = useState<Sticker[]>([])
   const [selected, setSelected] = useState<Sticker | null>(null)
   const [newId, setNewId] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
+
+  const openCamera = useCallback(() => {
+    setEditing(false)
+    setCameraOpen(true)
+  }, [])
 
   const refresh = useCallback(async () => setStickers(await listStickers()), [])
   useEffect(() => { refresh() }, [refresh])
@@ -88,7 +93,7 @@ export default function App() {
       await refresh()
       setNewId(saved.id)
       setShot(null)
-      setTab('library')
+      setCameraOpen(false)
       setEditing(false)
     } catch (err) {
       console.error(err)
@@ -128,19 +133,19 @@ export default function App() {
   return (
     <>
       <DieCutDefs />
-      {tab === 'camera' && !shot && <Camera onCapture={handleCapture} latestUrl={latestUrl} />}
-      {tab === 'library' && (
-        <Library
-          stickers={stickers}
-          urls={urls}
-          newId={newId}
-          editing={editing}
-          onEditingChange={setEditing}
-          onOpen={setSelected}
-          onCamera={() => setTab('camera')}
-          onReorder={handleReorder}
-          onDelete={(ids) => void handleDeleteMany(ids)}
-        />
+      <Library
+        stickers={stickers}
+        urls={urls}
+        newId={newId}
+        editing={editing}
+        onEditingChange={setEditing}
+        onOpen={setSelected}
+        onCamera={openCamera}
+        onReorder={handleReorder}
+        onDelete={(ids) => void handleDeleteMany(ids)}
+      />
+      {cameraOpen && !shot && (
+        <Camera onCapture={handleCapture} latestUrl={latestUrl} onClose={() => setCameraOpen(false)} />
       )}
 
       <AnimatePresence>
@@ -169,33 +174,10 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {!shot && !selected && !editing && (
-        <nav className="tabbar">
-          {(['library', 'camera'] as const).map((t) => (
-            <button
-              key={t}
-              className={`tab pressable ${tab === t ? 'active' : ''}`}
-              onClick={() => {
-                setTab(t)
-                setEditing(false)
-                if (t === 'library') void refresh()
-              }}
-              aria-label={t === 'library' ? 'Library' : 'Camera'}
-            >
-              {tab === t && (
-                <motion.span
-                  layoutId="tab-pill"
-                  className="tab-pill"
-                  transition={{ type: 'spring', bounce: 0.25, duration: 0.45 }}
-                />
-              )}
-              <span className="tab-content">
-                <Icon name={t === 'library' ? 'sparkles' : 'camera'} size={20} />
-                {t === 'library' ? 'Library' : 'Camera'}
-              </span>
-            </button>
-          ))}
-        </nav>
+      {!shot && !selected && !editing && !cameraOpen && (
+        <button className="fab pressable" aria-label="Open camera" onClick={openCamera}>
+          <Icon name="camera" size={26} />
+        </button>
       )}
     </>
   )
