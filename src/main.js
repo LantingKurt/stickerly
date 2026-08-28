@@ -107,8 +107,14 @@ async function renderLibrary() {
   }
 }
 
+function isPhoto(file) {
+  if (!file) return false;
+  if (!file.type) return true;
+  return file.type.startsWith("image/");
+}
+
 async function onFile(file) {
-  if (!file || !file.type.startsWith("image/")) {
+  if (!isPhoto(file)) {
     setCameraError("That file is not a photo.");
     return;
   }
